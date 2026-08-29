@@ -1,0 +1,24 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Child profiles collection - allow read and write
+    match /child_profiles/{profileId} {
+      allow read, write: if true;
+    }
+    
+    // Parent settings collection
+    match /parent_settings/{settingId} {
+      allow read, write: if true;
+    }
+
+    // Daily quests collection
+    match /daily_quests/{questId} {
+      allow read, write: if true;
+    }
+
+    // Public student leaderboard
+    match /leaderboard/{entryId} {
+      allow read, write: if true;
+    }
+  }
+}
