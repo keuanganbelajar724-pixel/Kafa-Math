@@ -194,6 +194,32 @@ class SoundService {
     } catch (e) {}
   }
 
+  // Play playful bubble pop
+  public playPop() {
+    if (!this.soundEnabled) return;
+    try {
+      const ctx = this.getAudioContext();
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(450, now);
+      osc.frequency.exponentialRampToValueAtTime(900, now + 0.07);
+
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.08);
+    } catch (e) {}
+  }
+
   // Natural Indonesian Text-To-Speech (TTS)
   public speak(text: string, customRate?: number) {
     if (!this.voiceEnabled || typeof window === 'undefined' || !window.speechSynthesis) {

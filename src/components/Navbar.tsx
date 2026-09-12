@@ -7,6 +7,7 @@ import { Flame, Sparkles, Coins, Trophy, Volume2, VolumeX, Shield, Users, Shoppi
 interface Props {
   activeProfile: ChildProfile;
   parentSettings: ParentSettings;
+  onNavigateHome?: () => void;
   onOpenProfiles: () => void;
   onOpenParentDashboard: () => void;
   onOpenShop: () => void;
@@ -22,6 +23,7 @@ interface Props {
 export const Navbar: React.FC<Props> = ({
   activeProfile,
   parentSettings,
+  onNavigateHome,
   onOpenProfiles,
   onOpenParentDashboard,
   onOpenShop,
@@ -40,7 +42,14 @@ export const Navbar: React.FC<Props> = ({
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
         {/* Brand & Child Profile Quick Switch */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={onOpenProfiles}>
+          <div
+            className="flex items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95"
+            onClick={() => {
+              sound.playClick();
+              if (onNavigateHome) onNavigateHome();
+              else onOpenProfiles();
+            }}
+          >
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 flex items-center justify-center text-white font-black text-xl shadow-md border-2 border-white">
               📐
             </div>

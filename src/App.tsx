@@ -43,7 +43,20 @@ import { ExamSimulationModal } from './components/ExamSimulationModal';
 import { MathDuelModal } from './components/MathDuelModal';
 import { FormulaHandbookModal } from './components/FormulaHandbookModal';
 
+// 5 Core Game Views & Modern Game Navigation
+import { WORLDS_DATA } from './data/worldsData';
+import { HomeView } from './components/views/HomeView';
+import { MapView } from './components/views/MapView';
+import { GameView } from './components/views/GameView';
+import { ProgressView } from './components/views/ProgressView';
+import { ProfileView } from './components/views/ProfileView';
+import { BottomNavigation, MainTabType } from './components/BottomNavigation';
+import { LevelChallengeModal } from './components/LevelChallengeModal';
+import { DailyChallengeModal } from './components/DailyChallengeModal';
+
 // Minigames
+import { MakanKerupukGame } from './components/minigames/MakanKerupukGame';
+import { TarikTambangGame } from './components/minigames/TarikTambangGame';
 import { CatchNumberGame } from './components/minigames/CatchNumberGame';
 import { WarungRupiahGame } from './components/minigames/WarungRupiahGame';
 import { FractionPizzaGame } from './components/minigames/FractionPizzaGame';
@@ -63,6 +76,8 @@ import { JungleSafariRescueGame } from './components/minigames/JungleSafariRescu
 import { SpaceExplorerGame } from './components/minigames/SpaceExplorerGame';
 import { MinecartTreasureRushGame } from './components/minigames/MinecartTreasureRushGame';
 import { MathVsMonsterBattleGame } from './components/minigames/MathVsMonsterBattleGame';
+import { CakeFractionSlicerGame } from './components/minigames/CakeFractionSlicerGame';
+import { DrawLineMatchGame } from './components/minigames/DrawLineMatchGame';
 
 export const App: React.FC = () => {
   // Profiles and Settings
@@ -95,6 +110,11 @@ export const App: React.FC = () => {
   const [showExamSimulation, setShowExamSimulation] = useState<boolean>(false);
   const [showMathDuel, setShowMathDuel] = useState<boolean>(false);
   const [showFormulaHandbook, setShowFormulaHandbook] = useState<boolean>(false);
+
+  // Active Main Navigation Tab (Home, Map, Game, Progress, Profile)
+  const [mainTab, setMainTab] = useState<MainTabType>('home');
+  const [selectedLevelNode, setSelectedLevelNode] = useState<MapNode | null>(null);
+  const [showDailyChallenge, setShowDailyChallenge] = useState<boolean>(false);
 
   // Session time tracker (minutes)
   const [sessionMinutes, setSessionMinutes] = useState<number>(0);
@@ -228,10 +248,46 @@ export const App: React.FC = () => {
     if (node.type === 'game' && node.minigameId) {
       setActiveMinigameId(node.minigameId);
     } else {
-      // Generate question for this node
-      const q = generateQuestion(activeProfile.phase, node.topicId, 1);
-      setCurrentQuestion(q);
+      // Launch 10-challenge Level Runner!
+      setSelectedLevelNode(node);
     }
+  };
+
+  // Continue Learning: finds next node in progression
+  const handleContinueLearning = () => {
+    const allNodes = WORLDS_DATA.flatMap((w) => w.nodes);
+    const nextNode =
+      allNodes.find((n) => !activeProfile.completedNodes.includes(n.id)) || allNodes[0];
+    handleSelectNode(nextNode);
+  };
+
+  // Level 10-Challenge Completion
+  const handleCompleteLevelChallenges = (stars: number, xpEarned: number, coinsEarned: number) => {
+    let updated = updateProfileStats(activeProfile, xpEarned, coinsEarned);
+    if (selectedLevelNode) {
+      updated = addCompletedNode(updated, selectedLevelNode.id);
+    }
+    if (!updated.achievements.includes('ach_first_step')) {
+      updated = unlockAchievement(updated, 'ach_first_step');
+    }
+    if (updated.completedNodes.length >= 5 && !updated.achievements.includes('ach_island_explorer')) {
+      updated = unlockAchievement(updated, 'ach_island_explorer');
+    }
+    handleUpdateProfile(updated);
+    setSelectedLevelNode(null);
+  };
+
+  // Daily Challenge Completion
+  const handleCompleteDailyChallenge = (bonusXP: number, bonusCoins: number) => {
+    let updated = updateProfileStats(activeProfile, bonusXP, bonusCoins);
+    updated = {
+      ...updated,
+      dailyQuestionsDone: (updated.dailyQuestionsDone || 0) + 10,
+    };
+    if (!updated.achievements.includes('ach_streak_3')) {
+      updated = unlockAchievement(updated, 'ach_streak_3');
+    }
+    handleUpdateProfile(updated);
   };
 
   // Question Answer handlers
@@ -282,10 +338,14 @@ export const App: React.FC = () => {
   };
 
   // Diagnostic Test completion
-  const handleDiagnosticComplete = (recommendedPhase: LearningPhase, score: number) => {
+  const handleDiagnosticComplete = (recommendedPhase: LearningPhase, score: number, stage?: any, assessment?: any) => {
     const updated: ChildProfile = {
       ...activeProfile,
       phase: recommendedPhase,
+      stage: stage || activeProfile.stage || 2,
+      diagnosticCompleted: true,
+      diagnosticAssessment: assessment,
+      diagnosticResult: assessment,
       xp: activeProfile.xp + 50,
       coins: activeProfile.coins + 30,
     };
@@ -304,6 +364,7 @@ export const App: React.FC = () => {
       <Navbar
         activeProfile={activeProfile}
         parentSettings={parentSettings}
+        onNavigateHome={() => setMainTab('home')}
         onOpenProfiles={() => setShowProfilesModal(true)}
         onOpenParentDashboard={() => setShowParentDashboard(true)}
         onOpenShop={() => setShowShop(true)}
@@ -318,26 +379,87 @@ export const App: React.FC = () => {
         }
       />
 
-      {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-6">
-        <ChildDashboard
-          activeProfile={activeProfile}
-          onSelectNode={handleSelectNode}
-          onLaunchMinigame={(id) => setActiveMinigameId(id)}
-          onStartQuickQuestion={(topicId) => {
-            const q = generateQuestion(activeProfile.phase, topicId, 1);
-            setCurrentQuestion(q);
-          }}
-          onOpenShop={() => setShowShop(true)}
-          onOpenDiagnostic={() => setShowDiagnostic(true)}
-          onOpenMathLab={() => setShowMathLab(true)}
-          onOpenExamSimulation={() => setShowExamSimulation(true)}
-          onOpenMathDuel={() => setShowMathDuel(true)}
-          onOpenFormulaHandbook={() => setShowFormulaHandbook(true)}
-          onOpenWorksheets={() => setShowWorksheetGenerator(true)}
-          onChangeGrade={handleChangeGrade}
-        />
+      {/* Main Content Area: 5 Modern Game Views */}
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-5">
+        {mainTab === 'home' && (
+          <HomeView
+            activeProfile={activeProfile}
+            onContinueLearning={handleContinueLearning}
+            onOpenDailyChallenge={() => setShowDailyChallenge(true)}
+            onNavigateTab={(tab) => setMainTab(tab)}
+            onLaunchMinigame={(id) => setActiveMinigameId(id)}
+            onStartQuickQuestion={(topicId) => {
+              const q = generateQuestion(activeProfile.phase, topicId, 1);
+              setCurrentQuestion(q);
+            }}
+            onChangeGrade={handleChangeGrade}
+          />
+        )}
+        {mainTab === 'map' && (
+          <MapView
+            activeProfile={activeProfile}
+            onSelectNode={handleSelectNode}
+          />
+        )}
+        {mainTab === 'game' && (
+          <GameView
+            onLaunchMinigame={(id) => setActiveMinigameId(id)}
+          />
+        )}
+        {mainTab === 'progress' && (
+          <ProgressView
+            activeProfile={activeProfile}
+            onPracticeTopic={(topicId) => {
+              const q = generateQuestion(activeProfile.phase, topicId, 1);
+              setCurrentQuestion(q);
+            }}
+          />
+        )}
+        {mainTab === 'profile' && (
+          <ProfileView
+            activeProfile={activeProfile}
+            parentSettings={parentSettings}
+            onOpenProfiles={() => setShowProfilesModal(true)}
+            onOpenShop={() => setShowShop(true)}
+            onOpenParentDashboard={() => setShowParentDashboard(true)}
+            onChangeGrade={handleChangeGrade}
+          />
+        )}
       </main>
+
+      {/* Touch-Friendly Bottom Navigation (Home, Map, Game, Progress, Profile) */}
+      <BottomNavigation
+        activeTab={mainTab}
+        onChangeTab={(tab) => setMainTab(tab)}
+      />
+
+      {/* 10-CHALLENGE SERIAL LEVEL RUNNER MODAL */}
+      {selectedLevelNode && (
+        <LevelChallengeModal
+          node={selectedLevelNode}
+          childPhase={activeProfile.phase}
+          childName={activeProfile.name}
+          onCompleteLevel={handleCompleteLevelChallenges}
+          onAskAITutor={(q) => {
+            setCurrentQuestion(q);
+            setShowAITutor(true);
+          }}
+          onClose={() => setSelectedLevelNode(null)}
+        />
+      )}
+
+      {/* DAILY CHALLENGE MODAL */}
+      {showDailyChallenge && (
+        <DailyChallengeModal
+          activeProfile={activeProfile}
+          onComplete={handleCompleteDailyChallenge}
+          onAskAITutor={(q) => {
+            setCurrentQuestion(q);
+            setShowAITutor(true);
+          }}
+          onClose={() => setShowDailyChallenge(false)}
+        />
+      )}
 
       {/* QUESTION MODAL */}
       {currentQuestion && (
@@ -460,6 +582,30 @@ export const App: React.FC = () => {
       {activeMinigameId && (
         <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
           <div className="max-w-2xl w-full my-auto">
+            {activeMinigameId === 'cake_fraction_slicer' && (
+              <CakeFractionSlicerGame
+                onComplete={handleMinigameComplete}
+                onExit={() => setActiveMinigameId(null)}
+              />
+            )}
+            {activeMinigameId === 'draw_line_match' && (
+              <DrawLineMatchGame
+                onComplete={handleMinigameComplete}
+                onExit={() => setActiveMinigameId(null)}
+              />
+            )}
+            {activeMinigameId === 'makan_kerupuk' && (
+              <MakanKerupukGame
+                onComplete={handleMinigameComplete}
+                onExit={() => setActiveMinigameId(null)}
+              />
+            )}
+            {activeMinigameId === 'tarik_tambang' && (
+              <TarikTambangGame
+                onComplete={handleMinigameComplete}
+                onExit={() => setActiveMinigameId(null)}
+              />
+            )}
             {activeMinigameId === 'catch_numbers' && (
               <CatchNumberGame
                 onComplete={handleMinigameComplete}

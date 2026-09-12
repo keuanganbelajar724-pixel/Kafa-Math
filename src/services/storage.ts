@@ -42,12 +42,12 @@ export function getLevelInfo(xp: number) {
 
 export const DEFAULT_PROFILES: ChildProfile[] = [
   {
-    id: 'child_ahmad',
-    name: 'Ahmad',
+    id: 'child_teman',
+    name: 'Teman',
     age: 7,
     grade: 'SD Kelas 2',
     phase: 'fase_a',
-    avatarId: 'avatar_ahmad',
+    avatarId: 'avatar_teman',
     avatarConfig: {
       skinTone: 'warm',
       hairStyle: 'short',
@@ -157,7 +157,25 @@ export function loadProfiles(): ChildProfile[] {
   try {
     const raw = localStorage.getItem(PROFILES_KEY);
     if (raw) {
-      return JSON.parse(raw);
+      const list: ChildProfile[] = JSON.parse(raw);
+      // Migrate legacy 'Ahmad' profile name to 'Teman'
+      let updated = false;
+      const sanitized = list.map((p) => {
+        if (p.name === 'Ahmad') {
+          updated = true;
+          return {
+            ...p,
+            name: 'Teman',
+            id: p.id === 'child_ahmad' ? 'child_teman' : p.id,
+            avatarId: p.avatarId === 'avatar_ahmad' ? 'avatar_teman' : p.avatarId,
+          };
+        }
+        return p;
+      });
+      if (updated) {
+        saveProfiles(sanitized);
+      }
+      return sanitized;
     }
   } catch (e) {
     console.error('Failed to load profiles from localStorage', e);

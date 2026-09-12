@@ -7,12 +7,74 @@ export enum LearningPhase {
   FASE_C = 'fase_c',
 }
 
+// Cambridge-inspired Primary Stages (Ages ~5-11)
+export type PrimaryStage = 1 | 2 | 3 | 4 | 5 | 6;
+
+// 3 Core Mathematical Domains
+export type MathDomain = 'number' | 'geometry_measure' | 'statistics_probability';
+
+// Thinking & Working Mathematically (TWM) Strands
+export type TWMStrand =
+  | 'specialising'
+  | 'generalising'
+  | 'conjecturing'
+  | 'convincing'
+  | 'characterising'
+  | 'classifying'
+  | 'critiquing'
+  | 'improving';
+
+// Cognitive Learning Dimensions
+export type QuestionCognitiveType = 'fluency' | 'concept' | 'reasoning' | 'problem_solving';
+
+// High-Order Thinking Question Types
+export type ThinkingQuestionType =
+  | 'standard'
+  | 'multiple_strategies'      // e.g. Strategy A vs Strategy B
+  | 'how_do_you_know'          // Reasoning verification
+  | 'always_sometimes_never'   // Mathematical certainty analysis
+  | 'find_the_mistake'         // Math Detective: locate error & fix
+  | 'which_one_doesnt_belong'  // WODB 4 items + multi-perspective reasoning
+  | 'estimation'               // Reasonable magnitude & estimation
+  | 'bar_model'                // Visual bar model representation
+  | 'pattern_rule'             // Predict next & state algebra/pattern rule
+  | 'open_ended';              // Multi-solution acceptable problems
+
+export interface DiagnosticAssessment {
+  stage: PrimaryStage;
+  overallLevelName: string;
+  numberSenseScore: number;       // 0-100
+  geometryMeasureScore: number;    // 0-100
+  statsProbScore: number;         // 0-100
+  fluencyScore: number;           // 0-100
+  conceptScore: number;           // 0-100
+  reasoningScore: number;         // 0-100
+  problemSolvingScore: number;    // 0-100
+  strengths: string[];
+  developingAreas: string[];
+  recommendedPath: string[];
+  completedDate?: string;
+}
+
+export interface MathJournalEntry {
+  id: string;
+  date: string;
+  stage: PrimaryStage;
+  topic: string;
+  discovery: string;
+  favoriteStrategy: string;
+  trickyQuestion?: string;
+  moodEmoji: string;
+}
+
 export interface ChildProfile {
   id: string;
   name: string;
   age?: number;
   grade: string; // "PAUD/TK", "SD Kelas 1", "SD Kelas 2", etc.
   phase: PhaseId | LearningPhase;
+  stage?: PrimaryStage; // Stage 1 - 6
+  languageMode?: 'id' | 'en' | 'bilingual';
   avatar?: string;
   avatarId?: string;
   avatarConfig?: {
@@ -51,6 +113,9 @@ export interface ChildProfile {
   unlockedCosmetics: string[];
   unlockedItems?: string[];
   diagnosticCompleted?: boolean;
+  diagnosticAssessment?: DiagnosticAssessment;
+  diagnosticResult?: DiagnosticAssessment;
+  mathJournal?: MathJournalEntry[];
 }
 
 export interface TopicCompetency {
@@ -123,27 +188,67 @@ export type MiniGameType =
   | 'tower_defense'
   | 'jungle_safari'
   | 'space_explorer'
-  | 'minecart_rush';
+  | 'minecart_rush'
+  | 'cake_fraction_slicer'
+  | 'draw_line_match'
+  | 'place_value_blocks'
+  | 'ruler_measurement';
+
+export interface QuestionStrategy {
+  id: string;
+  name: string;
+  steps: string;
+  isOptimal?: boolean;
+}
+
+export interface WODBItem {
+  id: string;
+  label: string;
+  value: string;
+  reason: string;
+}
 
 export interface QuestionItem {
   id: string;
   phase: PhaseId | LearningPhase;
+  stage?: PrimaryStage;
+  domain?: MathDomain;
+  cognitiveType?: QuestionCognitiveType;
+  thinkingType?: ThinkingQuestionType;
   grade: string;
   topicId: string;
   topicTitle: string;
   competency: string;
   difficulty: 1 | 2 | 3 | 4;
   question: string;
+  englishQuestion?: string;
   contextStory?: string;
-  visualType?: 'none' | 'objects' | 'fraction_pie' | 'money' | 'shapes' | 'clock' | 'balance';
+  visualType?: 'none' | 'objects' | 'fraction_pie' | 'money' | 'shapes' | 'clock' | 'balance' | 'bar_model' | 'ten_frame' | 'number_line';
   visualData?: any;
   options: string[];
   correctAnswer: string;
+  acceptedAnswers?: string[];
   explanation: string;
+  englishExplanation?: string;
   hint1: string;
   hint2: string;
   hint3: string;
   audioPrompt?: string;
+  strategies?: QuestionStrategy[];
+  wodbItems?: WODBItem[];
+  reasoningOptions?: string[];
+  mistakeContext?: {
+    studentName: string;
+    initialClaim: string;
+    errorLocation: string;
+    correctFix: string;
+  };
+  barModelData?: {
+    whole: number | string;
+    parts: { label: string; value: number | string; isUnknown?: boolean }[];
+  };
+  twmStrand?: TWMStrand;
+  realWorldScenario?: string;
 }
 
 export interface AchievementItem {
@@ -185,6 +290,7 @@ export interface DailyQuest {
 
 export interface ParentSettings {
   parentPin: string;
+  languageMode?: 'id' | 'en' | 'bilingual';
   dailyTimeLimitMinutes?: number;
   dailyScreenTimeMinutes?: number; // 10, 15, 20, 30
   soundEffects: boolean;

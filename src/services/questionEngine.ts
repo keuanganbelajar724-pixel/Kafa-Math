@@ -1,14 +1,45 @@
-import { QuestionItem, PhaseId, LearningPhase } from '../types';
+import { QuestionItem, PhaseId, LearningPhase, PrimaryStage, MathDomain } from '../types';
 import { QUESTION_BANK, CURRICULUM_TOPICS } from '../data/curriculumData';
+import { THINKING_QUESTIONS_BANK } from '../data/cambridgeCurriculumData';
 import { GradeMathEngine, GradeLevel } from './gradeMathEngine';
 
 export function generateQuestion(phase: PhaseId | LearningPhase, topicId?: string, difficulty: number = 1): QuestionItem {
   return QuestionEngine.generateDynamicQuestion(phase as PhaseId, topicId, difficulty);
 }
 
+export function generateThinkingQuestion(stage: PrimaryStage = 2, domain?: MathDomain): QuestionItem {
+  const filtered = THINKING_QUESTIONS_BANK.filter((q) => {
+    if (stage && q.stage !== stage) return false;
+    if (domain && q.domain !== domain) return false;
+    return true;
+  });
+
+  if (filtered.length > 0) {
+    const selected = filtered[Math.floor(Math.random() * filtered.length)];
+    return { ...selected, id: `thk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}` };
+  }
+
+  // Fallback to any thinking question
+  const fallback = THINKING_QUESTIONS_BANK[Math.floor(Math.random() * THINKING_QUESTIONS_BANK.length)];
+  return { ...fallback, id: `thk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}` };
+}
+
 export class QuestionEngine {
   public static generateDynamicQuestion(phase: PhaseId, topicId?: string, difficulty: number = 1): QuestionItem {
-    // 1. Try to find matching question in bank first
+    // 1. Check if a thinking question matches phase
+    if (Math.random() > 0.4) {
+      const thinkingMatches = THINKING_QUESTIONS_BANK.filter((q) => {
+        if (topicId && q.topicId === topicId) return true;
+        if (q.phase === phase) return true;
+        return false;
+      });
+      if (thinkingMatches.length > 0) {
+        const sel = thinkingMatches[Math.floor(Math.random() * thinkingMatches.length)];
+        return { ...sel, id: `gen_thk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}` };
+      }
+    }
+
+    // 2. Try to find matching question in bank first
     const pool = QUESTION_BANK.filter((q) => {
       if (topicId && q.topicId === topicId) return true;
       if (q.phase === phase && !topicId) return true;
