@@ -78,6 +78,16 @@ import { MinecartTreasureRushGame } from './components/minigames/MinecartTreasur
 import { MathVsMonsterBattleGame } from './components/minigames/MathVsMonsterBattleGame';
 import { CakeFractionSlicerGame } from './components/minigames/CakeFractionSlicerGame';
 import { DrawLineMatchGame } from './components/minigames/DrawLineMatchGame';
+import { PlaceValueBlocksGame } from './components/minigames/PlaceValueBlocksGame';
+import { RulerMeasurementGame } from './components/minigames/RulerMeasurementGame';
+import { NumberLineFrogGame } from './components/minigames/NumberLineFrogGame';
+import { TangramSymmetryGame } from './components/minigames/TangramSymmetryGame';
+import { LiquidMeasuringJugGame } from './components/minigames/LiquidMeasuringJugGame';
+import { BarChartBuilderGame } from './components/minigames/BarChartBuilderGame';
+import { PanBalanceAlgebraGame } from './components/minigames/PanBalanceAlgebraGame';
+import { AngleProtractorLabGame } from './components/minigames/AngleProtractorLabGame';
+import { VennDiagramSorterGame } from './components/minigames/VennDiagramSorterGame';
+import { GeoboardLabGame } from './components/minigames/GeoboardLabGame';
 
 export const App: React.FC = () => {
   // Profiles and Settings
@@ -242,11 +252,24 @@ export const App: React.FC = () => {
     sound.speak(`Halo ${name}! Selamat datang di petualangan matematika!`);
   };
 
+  // Game Launch Router (supports both standalone modals like Math Duel / Lab and overlay minigames)
+  const handleLaunchGame = (id: string) => {
+    if (id === 'math_duel') {
+      setShowMathDuel(true);
+    } else if (id === 'math_lab') {
+      setShowMathLab(true);
+    } else if (id === 'exam_simulation') {
+      setShowExamSimulation(true);
+    } else {
+      setActiveMinigameId(id);
+    }
+  };
+
   // Node Selection from Adventure Map
   const handleSelectNode = (node: MapNode) => {
     setActiveNode(node);
     if (node.type === 'game' && node.minigameId) {
-      setActiveMinigameId(node.minigameId);
+      handleLaunchGame(node.minigameId);
     } else {
       // Launch 10-challenge Level Runner!
       setSelectedLevelNode(node);
@@ -387,7 +410,7 @@ export const App: React.FC = () => {
             onContinueLearning={handleContinueLearning}
             onOpenDailyChallenge={() => setShowDailyChallenge(true)}
             onNavigateTab={(tab) => setMainTab(tab)}
-            onLaunchMinigame={(id) => setActiveMinigameId(id)}
+            onLaunchMinigame={handleLaunchGame}
             onStartQuickQuestion={(topicId) => {
               const q = generateQuestion(activeProfile.phase, topicId, 1);
               setCurrentQuestion(q);
@@ -403,7 +426,7 @@ export const App: React.FC = () => {
         )}
         {mainTab === 'game' && (
           <GameView
-            onLaunchMinigame={(id) => setActiveMinigameId(id)}
+            onLaunchMinigame={handleLaunchGame}
           />
         )}
         {mainTab === 'progress' && (
@@ -580,8 +603,33 @@ export const App: React.FC = () => {
 
       {/* ACTIVE MINIGAME OVERLAY */}
       {activeMinigameId && (
-        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActiveMinigameId(null);
+          }}
+          className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+        >
           <div className="max-w-2xl w-full my-auto">
+            {activeMinigameId === 'math_duel' && (
+              <MathDuelModal
+                activeProfile={activeProfile}
+                onClose={() => setActiveMinigameId(null)}
+                onRewardXP={handleRewardXP}
+              />
+            )}
+            {activeMinigameId === 'math_lab' && (
+              <MathLaboratoryModal
+                activeProfile={activeProfile}
+                onClose={() => setActiveMinigameId(null)}
+              />
+            )}
+            {activeMinigameId === 'exam_simulation' && (
+              <ExamSimulationModal
+                activeProfile={activeProfile}
+                onClose={() => setActiveMinigameId(null)}
+                onRewardXP={handleRewardXP}
+              />
+            )}
             {activeMinigameId === 'cake_fraction_slicer' && (
               <CakeFractionSlicerGame
                 onComplete={handleMinigameComplete}
@@ -590,6 +638,66 @@ export const App: React.FC = () => {
             )}
             {activeMinigameId === 'draw_line_match' && (
               <DrawLineMatchGame
+                onComplete={handleMinigameComplete}
+                onExit={() => setActiveMinigameId(null)}
+              />
+            )}
+            {activeMinigameId === 'place_value_blocks' && (
+              <PlaceValueBlocksGame
+                onComplete={handleMinigameComplete}
+                onExit={() => setActiveMinigameId(null)}
+              />
+            )}
+            {activeMinigameId === 'ruler_measurement' && (
+              <RulerMeasurementGame
+                onComplete={handleMinigameComplete}
+                onExit={() => setActiveMinigameId(null)}
+              />
+            )}
+            {activeMinigameId === 'number_line_frog' && (
+              <NumberLineFrogGame
+                onComplete={handleMinigameComplete}
+                onExit={() => setActiveMinigameId(null)}
+              />
+            )}
+            {activeMinigameId === 'tangram_symmetry' && (
+              <TangramSymmetryGame
+                onComplete={handleMinigameComplete}
+                onExit={() => setActiveMinigameId(null)}
+              />
+            )}
+            {activeMinigameId === 'liquid_measuring_jug' && (
+              <LiquidMeasuringJugGame
+                onComplete={handleMinigameComplete}
+                onExit={() => setActiveMinigameId(null)}
+              />
+            )}
+            {activeMinigameId === 'barchart_builder' && (
+              <BarChartBuilderGame
+                onComplete={handleMinigameComplete}
+                onExit={() => setActiveMinigameId(null)}
+              />
+            )}
+            {activeMinigameId === 'pan_balance_scale' && (
+              <PanBalanceAlgebraGame
+                onComplete={handleMinigameComplete}
+                onExit={() => setActiveMinigameId(null)}
+              />
+            )}
+            {activeMinigameId === 'angle_protractor_lab' && (
+              <AngleProtractorLabGame
+                onComplete={handleMinigameComplete}
+                onExit={() => setActiveMinigameId(null)}
+              />
+            )}
+            {activeMinigameId === 'venn_diagram_sorter' && (
+              <VennDiagramSorterGame
+                onComplete={handleMinigameComplete}
+                onExit={() => setActiveMinigameId(null)}
+              />
+            )}
+            {activeMinigameId === 'geoboard_perimeter_area' && (
+              <GeoboardLabGame
                 onComplete={handleMinigameComplete}
                 onExit={() => setActiveMinigameId(null)}
               />
@@ -606,7 +714,7 @@ export const App: React.FC = () => {
                 onExit={() => setActiveMinigameId(null)}
               />
             )}
-            {activeMinigameId === 'catch_numbers' && (
+            {(activeMinigameId === 'catch_numbers' || activeMinigameId === 'catch_number') && (
               <CatchNumberGame
                 onComplete={handleMinigameComplete}
                 onExit={() => setActiveMinigameId(null)}
@@ -630,7 +738,7 @@ export const App: React.FC = () => {
                 onExit={() => setActiveMinigameId(null)}
               />
             )}
-            {activeMinigameId === 'clock_master' && (
+            {(activeMinigameId === 'clock_master' || activeMinigameId === 'interactive_clock') && (
               <InteractiveClockGame
                 onComplete={handleMinigameComplete}
                 onExit={() => setActiveMinigameId(null)}
@@ -721,6 +829,32 @@ export const App: React.FC = () => {
                 onComplete={handleMinigameComplete}
                 onExit={() => setActiveMinigameId(null)}
               />
+            )}
+
+            {/* Fallback to prevent blank screen if ID is unhandled */}
+            {![
+              'cake_fraction_slicer', 'draw_line_match', 'place_value_blocks', 'ruler_measurement',
+              'number_line_frog', 'tangram_symmetry', 'liquid_measuring_jug', 'barchart_builder',
+              'pan_balance_scale', 'angle_protractor_lab', 'venn_diagram_sorter', 'geoboard_perimeter_area',
+              'makan_kerupuk', 'tarik_tambang', 'catch_numbers', 'catch_number', 'warung_rupiah',
+              'fraction_pizza', 'racing_math', 'clock_master', 'interactive_clock', 'garden_counter',
+              'balance_scale', 'geometry_builder', 'pattern_guess', 'barchart_collector', 'order_train',
+              'match_cards', 'temple_escape', 'temple_rpg', 'pirate_voyage', 'pirate_sea', 'tower_defense',
+              'fortress_defense', 'jungle_safari', 'safari_rescue', 'space_explorer', 'galactic_rover',
+              'minecart_rush', 'minecart_treasure', 'math_vs_monster', 'math_undead', 'monster_battle',
+              'math_duel', 'math_lab', 'exam_simulation'
+            ].includes(activeMinigameId) && (
+              <div className="bg-white rounded-3xl p-6 text-center space-y-4 border-4 border-amber-400 shadow-2xl max-w-md mx-auto">
+                <div className="text-4xl">🎮</div>
+                <h3 className="text-lg font-black text-slate-800">Game Sedang Disiapkan</h3>
+                <p className="text-sm text-slate-600">ID: {activeMinigameId}</p>
+                <button
+                  onClick={() => setActiveMinigameId(null)}
+                  className="px-6 py-2.5 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-black cursor-pointer shadow-md"
+                >
+                  Tutup / Kembali
+                </button>
+              </div>
             )}
           </div>
         </div>

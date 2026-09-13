@@ -192,7 +192,15 @@ export type MiniGameType =
   | 'cake_fraction_slicer'
   | 'draw_line_match'
   | 'place_value_blocks'
-  | 'ruler_measurement';
+  | 'ruler_measurement'
+  | 'number_line_frog'
+  | 'tangram_symmetry'
+  | 'liquid_measuring_jug'
+  | 'barchart_builder'
+  | 'pan_balance_scale'
+  | 'angle_protractor_lab'
+  | 'venn_diagram_sorter'
+  | 'geoboard_perimeter_area';
 
 export interface QuestionStrategy {
   id: string;
