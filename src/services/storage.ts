@@ -267,3 +267,135 @@ export function saveDailyQuests(quests: DailyQuest[]): void {
     localStorage.setItem(QUESTS_KEY, JSON.stringify(quests));
   } catch (e) {}
 }
+
+// Digital Workbook & Question Storage
+const WORKBOOK_ANSWERS_PREFIX = 'kafa_workbook_answers_v1_';
+const MISTAKES_PREFIX = 'kafa_mistakes_bank_v1_';
+const EXAM_RESULTS_PREFIX = 'kafa_exam_results_v1_';
+const QUICK_MATH_PREFIX = 'kafa_quick_math_v1_';
+const FOCUS_MODE_KEY = 'kafa_focus_mode_v1';
+
+export function loadWorkbookAnswers(profileId: string): Record<string, import('../types').WorkbookSavedAnswer> {
+  try {
+    const raw = localStorage.getItem(`${WORKBOOK_ANSWERS_PREFIX}${profileId}`);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed to load workbook answers', e);
+  }
+  return {};
+}
+
+export function saveWorkbookAnswer(
+  profileId: string,
+  answerData: import('../types').WorkbookSavedAnswer
+): Record<string, import('../types').WorkbookSavedAnswer> {
+  try {
+    const current = loadWorkbookAnswers(profileId);
+    current[answerData.questionId] = answerData;
+    localStorage.setItem(`${WORKBOOK_ANSWERS_PREFIX}${profileId}`, JSON.stringify(current));
+    return current;
+  } catch (e) {
+    console.error('Failed to save workbook answer', e);
+    return {};
+  }
+}
+
+export function loadMistakes(profileId: string): import('../types').MistakeItem[] {
+  try {
+    const raw = localStorage.getItem(`${MISTAKES_PREFIX}${profileId}`);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed to load mistakes', e);
+  }
+  return [];
+}
+
+export function saveMistake(
+  profileId: string,
+  question: import('../types').GeneratedMathQuestion,
+  wrongAnswer: string
+): import('../types').MistakeItem[] {
+  try {
+    const mistakes = loadMistakes(profileId);
+    const existingIdx = mistakes.findIndex((m) => m.question.id === question.id || m.question.hash === question.hash);
+    if (existingIdx >= 0) {
+      mistakes[existingIdx].timesWrong += 1;
+      mistakes[existingIdx].wrongAnswer = wrongAnswer;
+      mistakes[existingIdx].resolved = false;
+    } else {
+      mistakes.unshift({
+        id: `mis_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        profileId,
+        question,
+        wrongAnswer,
+        dateAdded: new Date().toLocaleDateString('id-ID'),
+        resolved: false,
+        timesWrong: 1,
+      });
+    }
+    localStorage.setItem(`${MISTAKES_PREFIX}${profileId}`, JSON.stringify(mistakes.slice(0, 50)));
+    return mistakes;
+  } catch (e) {
+    console.error('Failed to save mistake', e);
+    return [];
+  }
+}
+
+export function resolveMistake(profileId: string, mistakeId: string): import('../types').MistakeItem[] {
+  try {
+    const mistakes = loadMistakes(profileId);
+    const updated = mistakes.map((m) => (m.id === mistakeId ? { ...m, resolved: true } : m));
+    localStorage.setItem(`${MISTAKES_PREFIX}${profileId}`, JSON.stringify(updated));
+    return updated;
+  } catch (e) {
+    console.error('Failed to resolve mistake', e);
+    return [];
+  }
+}
+
+export function loadExamResults(profileId: string): import('../types').ExamSessionResult[] {
+  try {
+    const raw = localStorage.getItem(`${EXAM_RESULTS_PREFIX}${profileId}`);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return [];
+}
+
+export function saveExamResult(profileId: string, result: import('../types').ExamSessionResult): void {
+  try {
+    const results = loadExamResults(profileId);
+    results.unshift(result);
+    localStorage.setItem(`${EXAM_RESULTS_PREFIX}${profileId}`, JSON.stringify(results.slice(0, 30)));
+  } catch (e) {}
+}
+
+export function loadQuickMathBest(profileId: string, duration: 30 | 60 | 120): number {
+  try {
+    const raw = localStorage.getItem(`${QUICK_MATH_PREFIX}${profileId}_${duration}`);
+    if (raw) return Number(raw);
+  } catch (e) {}
+  return 0;
+}
+
+export function saveQuickMathBest(profileId: string, duration: 30 | 60 | 120, score: number): void {
+  try {
+    const current = loadQuickMathBest(profileId, duration);
+    if (score > current) {
+      localStorage.setItem(`${QUICK_MATH_PREFIX}${profileId}_${duration}`, String(score));
+    }
+  } catch (e) {}
+}
+
+export function loadFocusMode(): boolean {
+  try {
+    return localStorage.getItem(FOCUS_MODE_KEY) === 'true';
+  } catch (e) {
+    return false;
+  }
+}
+
+export function saveFocusMode(val: boolean): void {
+  try {
+    localStorage.setItem(FOCUS_MODE_KEY, val ? 'true' : 'false');
+  } catch (e) {}
+}

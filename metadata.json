@@ -1,6 +1,6 @@
 {
   "name": "KAFA MATH",
-  "description": "Platform Petualangan Pembelajaran Matematika Interaktif Anak Indonesia (PAUD/TK - SD Kelas 6) dengan Kurikulum Indonesia, Game Edukasi, Peta Nusantara, AI Tutor Sokratik, dan Generator Worksheet.",
+  "description": "Berlatih Matematika Jadi Lebih Seru - Buku Latihan Matematika Digital, Bank Soal Besar, Game Edukasi, dan Adaptive Learning untuk Anak SD.",
   "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

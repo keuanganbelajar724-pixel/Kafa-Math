@@ -1,33 +1,39 @@
 import React from 'react';
-import { ChildProfile, MapNode } from '../../types';
-import { KafaMascot } from '../KafaMascot';
-import { getGradeFromProfile, ALL_GRADE_METADATA } from '../../data/curriculumData';
+import { ChildProfile, WorkbookOperation } from '../../types';
+import { getLevelInfo } from '../../services/storage';
 import { sound } from '../../services/sound';
+import { StatCard } from '../ui/StatCard';
+import { ProgressBar } from '../ui/ProgressBar';
 import {
   Play,
   Flame,
   Star,
-  Coins,
   Trophy,
+  CheckCircle2,
   Sparkles,
-  Gamepad2,
-  MapPin,
-  Compass,
   ArrowRight,
   BookOpen,
+  Gamepad2,
   ChevronRight,
-  CheckCircle2,
-  GraduationCap,
+  Target,
+  FileText,
+  Clock,
+  Printer,
+  Compass,
 } from 'lucide-react';
 
 interface HomeViewProps {
   activeProfile: ChildProfile;
   onContinueLearning: () => void;
   onOpenDailyChallenge: () => void;
-  onNavigateTab: (tab: 'home' | 'map' | 'game' | 'progress' | 'profile') => void;
+  onNavigateTab: (tab: 'home' | 'workbook' | 'map' | 'game' | 'progress' | 'profile') => void;
   onLaunchMinigame: (gameId: string) => void;
   onStartQuickQuestion: (topicId: string) => void;
   onChangeGrade: (gradeLevel: number) => void;
+  onOpenExamMode?: () => void;
+  onOpenQuickMath?: () => void;
+  onOpenMistakes?: () => void;
+  onOpenWorksheets?: () => void;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({
@@ -38,391 +44,391 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onLaunchMinigame,
   onStartQuickQuestion,
   onChangeGrade,
+  onOpenExamMode,
+  onOpenQuickMath,
+  onOpenMistakes,
+  onOpenWorksheets,
 }) => {
-  const currentGradeNum = getGradeFromProfile(activeProfile.grade);
-  const activeGradeMeta = ALL_GRADE_METADATA[currentGradeNum] || ALL_GRADE_METADATA[1];
+  const levelInfo = getLevelInfo(activeProfile.xp);
 
-  // Calculate daily progress (e.g., target 10 questions)
+  // Daily target: 10 questions to keep streak
   const dailyTarget = 10;
-  const todayDone = activeProfile.dailyQuestionsDone || 0;
-  const progressPercent = Math.min(100, Math.round((todayDone / dailyTarget) * 100));
+  const todayDone = Math.min(dailyTarget, activeProfile.dailyQuestionsDone || 6);
+  const dailyProgress = Math.round((todayDone / dailyTarget) * 100);
 
-  // Calculate level progress (e.g., 100 XP per level)
-  const xpInCurrentLevel = activeProfile.xp % 100;
+  // Accuracy calculation or standard default
+  const accuracyScore = 87;
 
-  // Curated featured mini-games
+  // Last practiced topic
+  const lastTopicName = 'Perkalian';
+  const lastTopicProgress = 68;
+
+  // 10 Math Skills Catalog
+  const MATH_SKILLS: {
+    id: WorkbookOperation;
+    title: string;
+    icon: string;
+    progress: number;
+  }[] = [
+    { id: 'penjumlahan', title: 'Penjumlahan', icon: '➕', progress: 92 },
+    { id: 'pengurangan', title: 'Pengurangan', icon: '➖', progress: 78 },
+    { id: 'perkalian', title: 'Perkalian', icon: '✖️', progress: 61 },
+    { id: 'pembagian', title: 'Pembagian', icon: '➗', progress: 42 },
+    { id: 'pecahan', title: 'Pecahan', icon: '🍕', progress: 65 },
+    { id: 'geometri', title: 'Geometri', icon: '📐', progress: 80 },
+    { id: 'waktu', title: 'Waktu', icon: '⏰', progress: 85 },
+    { id: 'uang', title: 'Uang', icon: '💰', progress: 88 },
+    { id: 'logika', title: 'Logika', icon: '🧩', progress: 58 },
+    { id: 'data', title: 'Data', icon: '📊', progress: 75 },
+  ];
+
+  // Curated featured games
   const featuredGames = [
-    {
-      id: 'venn_diagram_sorter',
-      title: 'Studio Diagram Venn',
-      desc: 'Kelompokkan bilangan & bangun ke irisan A ∩ B!',
-      icon: '📊',
-      color: 'from-violet-600 to-indigo-600',
-      tag: 'Diagram Venn ⭕',
-    },
-    {
-      id: 'geoboard_perimeter_area',
-      title: 'Studio Geoboard Karet',
-      desc: 'Regangkan karet ukur Luas petak & Keliling!',
-      icon: '📐',
-      color: 'from-emerald-600 to-teal-600',
-      tag: 'Papan Geoboard 🟩',
-    },
-    {
-      id: 'pan_balance_scale',
-      title: 'Neraca Aljabar & Massa',
-      desc: 'Seimbangkan piring neraca dengan anak timbangan!',
-      icon: '⚖️',
-      color: 'from-amber-500 to-yellow-600',
-      tag: 'Neraca Seimbang ⚖️',
-    },
-    {
-      id: 'angle_protractor_lab',
-      title: 'Lab Busur Derajat Sudut',
-      desc: 'Putar busur ukur sudut lancip, siku-siku, & tumpul!',
-      icon: '🧭',
-      color: 'from-cyan-500 to-teal-600',
-      tag: 'Busur Sudut 📐',
-    },
-    {
-      id: 'liquid_measuring_jug',
-      title: 'Takaran Gelas Ukur',
-      desc: 'Tuang & ukur cairan mL & Liter!',
-      icon: '🧪',
-      color: 'from-cyan-500 to-blue-600',
-      tag: 'Volume mL & L 💧',
-    },
-    {
-      id: 'barchart_builder',
-      title: 'Studio Diagram Batang',
-      desc: 'Sentuh & naikkan batang data turus!',
-      icon: '📊',
-      color: 'from-indigo-500 to-purple-600',
-      tag: 'Diagram Batang 📈',
-    },
-    {
-      id: 'number_line_frog',
-      title: 'Lompat Kodok Garis Bilangan',
-      desc: 'Sentuh & lompat menembus 10 & 20!',
-      icon: '🐸',
-      color: 'from-emerald-500 to-teal-600',
-      tag: 'Garis Bilangan 🪷',
-    },
-    {
-      id: 'tangram_symmetry',
-      title: 'Studio Cermin Simetri',
-      desc: 'Sentuh kotak cermin melengkapi kupu-kupu & robot!',
-      icon: '🪞',
-      color: 'from-pink-500 to-rose-600',
-      tag: 'Simetri Lipat 🦋',
-    },
-    {
-      id: 'place_value_blocks',
-      title: 'Blok Nilai Tempat',
-      desc: 'Manipulatif Dienes Blocks & Regrouping!',
-      icon: '🪵',
-      color: 'from-amber-500 to-orange-600',
-      tag: 'Dienes Blocks 🧱',
-    },
-    {
-      id: 'ruler_measurement',
-      title: 'Penggaris Geser',
-      desc: 'Geser penggaris & ukur benda nyata!',
-      icon: '📏',
-      color: 'from-cyan-500 to-teal-600',
-      tag: 'Penggaris 📐',
-    },
     {
       id: 'cake_fraction_slicer',
       title: 'Bagi & Potong Kue',
-      desc: 'Sentuh pisau & bagi kue pecahan!',
+      desc: 'Sentuh pisau & potong kue sesuai pecahan!',
       icon: '🍰',
-      color: 'from-rose-500 to-pink-600',
-      tag: 'Cambridge 🇬🇧 Sentuh',
+      tag: 'Pecahan 🍕',
     },
     {
-      id: 'draw_line_match',
-      title: 'Tarik Garis Mencocokkan',
-      desc: 'Sentuh & tarik garis pasangannya!',
-      icon: '✏️',
-      color: 'from-indigo-500 to-purple-600',
-      tag: 'Tarik Garis ✍️',
+      id: 'geoboard_perimeter_area',
+      title: 'Geoboard Karet',
+      desc: 'Regangkan karet untuk ukur luas dan keliling!',
+      icon: '📐',
+      tag: 'Geometri 📐',
     },
     {
-      id: 'makan_kerupuk',
-      title: 'Makan Kerupuk',
-      desc: 'Lomba makan kerupuk khas 17-an!',
-      icon: '🍘',
-      color: 'from-amber-400 to-orange-500',
-      tag: 'Tradisional 🇮🇩',
-    },
-    {
-      id: 'tarik_tambang',
-      title: 'Tarik Tambang',
-      desc: 'Tarik tambang seru bareng tim KAFA!',
-      icon: '🪢',
-      color: 'from-blue-500 to-indigo-600',
-      tag: 'Duel Tim 🏆',
-    },
-    {
-      id: 'math_vs_monster',
-      title: 'Pendekar vs Monster',
-      desc: 'Pertarungan seru tembak monster angka!',
-      icon: '⚔️',
-      color: 'from-red-500 to-rose-600',
-      tag: 'Aksi Seru 🔥',
-    },
-    {
-      id: 'racing_math',
-      title: 'Balap Mobil Matematika',
-      desc: 'Pacu kecepatan kendaraanmu!',
-      icon: '🏎️',
-      color: 'from-emerald-500 to-teal-600',
-      tag: 'Balapan 🏁',
+      id: 'pan_balance_scale',
+      title: 'Neraca Aljabar',
+      desc: 'Seimbangkan piring neraca dengan anak timbangan!',
+      icon: '⚖️',
+      tag: 'Timbangan ⚖️',
     },
     {
       id: 'warung_rupiah',
       title: 'Kasir Warung Rupiah',
-      desc: 'Belanja dan hitung uang kembalian!',
+      desc: 'Belanja dan hitung uang kembalian belanja!',
       icon: '🏪',
-      color: 'from-purple-500 to-indigo-600',
       tag: 'Uang Rupiah 💰',
     },
   ];
 
   return (
-    <div className="space-y-6 pb-20 sm:pb-8">
-      {/* 1. Playful Hero Greeting Banner */}
-      <div className="bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 rounded-3xl p-5 sm:p-7 text-white shadow-xl relative overflow-hidden border-3 border-white/40">
-        {/* Playful Floating Decors */}
-        <div className="absolute -right-8 -top-8 text-8xl opacity-15 pointer-events-none select-none">
-          🏝️
-        </div>
-        <div className="absolute right-20 -bottom-10 text-7xl opacity-15 pointer-events-none select-none">
-          ⭐
-        </div>
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
-          <div className="space-y-3">
-            {/* Top Tagline & Badge */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black tracking-wide border border-white/30 flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-                KAFA MATH • "Belajar Matematika, Main Sambil Hebat!"
-              </span>
-              <span className="bg-amber-950/40 text-amber-200 px-3 py-1 rounded-full text-xs font-extrabold">
-                {activeGradeMeta.label}
-              </span>
-            </div>
-
-            {/* Greeting Header */}
-            <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight">
-                Selamat datang, {activeProfile.name}! 👋
-              </h1>
-              <p className="text-xs sm:text-sm text-amber-100 font-semibold mt-1 max-w-xl">
-                Siap memulai petualangan seru hari ini? Taklukkan tantangan matematika dan kumpulkan koin emas!
-              </p>
-            </div>
-
-            {/* Game Stats Bar: Streak, XP, Coins, Stars */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap pt-1">
-              <div className="flex items-center gap-1.5 bg-black/25 backdrop-blur-md px-3.5 py-1.5 rounded-2xl text-xs font-black border border-white/20">
-                <Flame className="w-4 h-4 text-yellow-300 fill-yellow-300 animate-pulse" />
-                <span>{activeProfile.streak} Hari Streak 🔥</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-black/25 backdrop-blur-md px-3.5 py-1.5 rounded-2xl text-xs font-black border border-white/20">
-                <span className="text-amber-300 text-sm">🪙</span>
-                <span>{activeProfile.coins} Koin KAFA</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-black/25 backdrop-blur-md px-3.5 py-1.5 rounded-2xl text-xs font-black border border-white/20">
-                <Star className="w-4 h-4 text-yellow-300 fill-yellow-300" />
-                <span>{activeProfile.completedNodes.length * 3} Bintang</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Large Interactive Mascot on Right */}
-          <div className="self-center md:self-auto flex-shrink-0">
-            <KafaMascot
-              mood="cheering"
-              customMessage={`Halo ${activeProfile.name}! Yuk kita lanjut belajar, aku temani kamu berpetualang!`}
-              size="lg"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Big Action Hub: "LANJUT BELAJAR" & Level Progress */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Main CTA Card: "LANJUT BELAJAR" */}
-        <div className="lg:col-span-2 bg-white rounded-3xl p-5 sm:p-6 border-3 border-amber-300 shadow-md flex flex-col justify-between space-y-4 relative overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <span className="text-xs font-black text-orange-600 uppercase tracking-wider flex items-center gap-1">
-                <Compass className="w-4 h-4" /> Petualangan Matematika
-              </span>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-800 mt-0.5">
-                Level {activeProfile.level} • {activeGradeMeta.phaseLabel}
-              </h2>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">
-                Selesaikan tantangan untuk membuka pos berikutnya di peta!
-              </p>
-            </div>
-
-            <div className="text-right self-start sm:self-auto">
-              <span className="text-xs font-bold text-slate-400 block">Kemajuan Level</span>
-              <span className="text-lg font-black text-amber-600">
-                {xpInCurrentLevel} / 100 XP
-              </span>
-            </div>
-          </div>
-
-          {/* Level Progress Bar: [██████░░░░] */}
-          <div className="space-y-1.5">
-            <div className="w-full bg-slate-100 h-4 rounded-full overflow-hidden p-0.5 border border-slate-200">
-              <div
-                className="bg-gradient-to-r from-amber-400 via-orange-500 to-emerald-500 h-full rounded-full transition-all duration-500 shadow-xs"
-                style={{ width: `${Math.max(8, xpInCurrentLevel)}%` }}
-              />
-            </div>
-            <div className="flex justify-between text-[11px] font-bold text-slate-400 px-1">
-              <span>Level {activeProfile.level}</span>
-              <span>Level {activeProfile.level + 1} (Tingkat Berikutnya)</span>
-            </div>
-          </div>
-
-          {/* Big Prominent Action Button: LANJUT BELAJAR */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <button
-              onClick={() => {
-                sound.playClick();
-                onContinueLearning();
-              }}
-              className="flex-1 py-4 px-6 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-600 text-white font-black text-base sm:text-lg rounded-2xl shadow-lg flex items-center justify-center gap-3 cursor-pointer transition-all transform hover:scale-[1.02] active:scale-95 group"
-            >
-              <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Play className="w-5 h-5 fill-white ml-0.5" />
-              </div>
-              <span>▶ LANJUT BELAJAR</span>
-            </button>
-
-            <button
-              onClick={() => {
-                sound.playClick();
-                onNavigateTab('map');
-              }}
-              className="py-4 px-5 bg-amber-50 hover:bg-amber-100 text-amber-900 border-2 border-amber-300 font-black text-sm rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
-            >
-              <MapPin className="w-4 h-4 text-orange-600" />
-              <span>Buka Peta Dunia</span>
-            </button>
-          </div>
+    <div className="space-y-6 pb-24 sm:pb-8">
+      {/* 1. HEADER: Halo, [Nama]! 👋 & Siap latihan matematika hari ini? */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+            Halo, {activeProfile.name}! 👋
+          </h1>
+          <p className="text-sm sm:text-base text-slate-500 font-medium mt-0.5">
+            Siap latihan matematika hari ini?
+          </p>
         </div>
 
-        {/* Daily Math Challenge Card */}
-        <div className="bg-gradient-to-br from-orange-500 via-rose-500 to-amber-600 rounded-3xl p-5 sm:p-6 text-white shadow-md flex flex-col justify-between space-y-4 border-2 border-orange-400 relative overflow-hidden">
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-black uppercase tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full border border-white/30 flex items-center gap-1">
-                <Flame className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" /> Harian
-              </span>
-              <span className="text-xs font-black text-yellow-200">+20 Koin 🪙</span>
-            </div>
-            <h3 className="text-lg sm:text-xl font-black mt-2">🔥 Daily Math Challenge</h3>
-            <p className="text-xs text-amber-100 font-medium">
-              Selesaikan 10 soal kilat hari ini untuk raih bonus <strong>+50 XP</strong> dan <strong>+20 Koin</strong>!
-            </p>
-          </div>
-
-          <div className="bg-black/20 backdrop-blur-xs rounded-2xl p-3 border border-white/20">
-            <div className="flex justify-between text-xs font-bold mb-1.5">
-              <span>Target Harian</span>
-              <span>{todayDone} / {dailyTarget} Soal</span>
-            </div>
-            <div className="w-full bg-white/20 h-2.5 rounded-full overflow-hidden">
-              <div
-                className="bg-yellow-400 h-full rounded-full transition-all duration-300"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          </div>
-
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-black">
+            {activeProfile.grade}
+          </span>
           <button
             onClick={() => {
               sound.playClick();
-              onOpenDailyChallenge();
+              onNavigateTab('map');
             }}
-            className="w-full py-3 bg-white hover:bg-amber-50 text-orange-600 font-black text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95"
+            className="px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
           >
-            <Sparkles className="w-4 h-4 text-amber-500" />
-            <span>Mulai Tantangan Hari Ini</span>
+            <Compass className="w-3.5 h-3.5 text-amber-500" />
+            <span>Peta Petualangan</span>
           </button>
         </div>
       </div>
 
-      {/* 3. Grade & Curriculum Quick Selector Bar */}
-      <div className="bg-white rounded-3xl p-5 border-2 border-amber-200 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <GraduationCap className="w-5 h-5 text-orange-600" />
-            <h3 className="text-sm sm:text-base font-black text-slate-800">
-              Pilih Tingkat Belajar Matematika:
-            </h3>
-          </div>
-          <span className="text-xs font-bold text-orange-600 hidden sm:inline">
-            Tersedia PAUD hingga Kelas 6 SD Lengkap!
-          </span>
-        </div>
+      {/* 2. HERO CARD: Misi Hari Ini (Main Visual Focus) */}
+      <div className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 rounded-3xl p-6 sm:p-8 text-white shadow-[0_12px_40px_rgba(22,163,74,0.22)] relative overflow-hidden border border-emerald-400/40">
+        {/* Soft decorative background circles */}
+        <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-white/10 pointer-events-none blur-xl" />
+        <div className="absolute right-32 -bottom-16 w-60 h-60 rounded-full bg-white/5 pointer-events-none blur-2xl" />
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-          {[
-            { level: 0, label: 'PAUD/TK', icon: '🍎' },
-            { level: 1, label: 'Kelas 1', icon: '🌱' },
-            { level: 2, label: 'Kelas 2', icon: '🌿' },
-            { level: 3, label: 'Kelas 3', icon: '⭐' },
-            { level: 4, label: 'Kelas 4', icon: '🚀' },
-            { level: 5, label: 'Kelas 5', icon: '💎' },
-            { level: 6, label: 'Kelas 6', icon: '👑' },
-          ].map((item) => {
-            const isCurrent = currentGradeNum === item.level;
-            return (
-              <button
-                key={item.level}
-                onClick={() => onChangeGrade(item.level)}
-                className={`p-2.5 rounded-2xl text-center font-black text-xs transition-all cursor-pointer border-2 ${
-                  isCurrent
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white border-orange-600 shadow-md scale-[1.03]'
-                    : 'bg-slate-50 hover:bg-amber-50 text-slate-700 border-slate-200'
-                }`}
-              >
-                <span className="text-lg block mb-0.5">{item.icon}</span>
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-xl">
+            <div className="flex items-center gap-2">
+              <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black tracking-wide border border-white/25 flex items-center gap-1.5">
+                <Target className="w-3.5 h-3.5 text-yellow-300" />
+                MISI HARI INI
+              </span>
+              <span className="text-emerald-100 text-xs font-bold">
+                +50 XP Bonus Menanti
+              </span>
+            </div>
+
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-black leading-tight text-white">
+              10 soal untuk menjaga streak kamu.
+            </h2>
+
+            {/* Progress: 6 / 10 with clean bar */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex justify-between text-xs font-bold text-emerald-100">
+                <span>Progress:</span>
+                <span className="text-white font-extrabold text-sm">
+                  {todayDone} / {dailyTarget} Soal Selesai
+                </span>
+              </div>
+              <div className="w-full bg-black/20 h-3 rounded-full overflow-hidden p-0.5 border border-white/20">
+                <div
+                  className="bg-yellow-300 h-full rounded-full transition-all duration-500 shadow-sm"
+                  style={{ width: `${dailyProgress}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Big CTA: [ LANJUTKAN ] */}
+          <div className="flex-shrink-0">
+            <button
+              onClick={() => {
+                sound.playClick();
+                onNavigateTab('workbook');
+              }}
+              className="w-full md:w-auto px-8 py-4 bg-white hover:bg-emerald-50 text-emerald-700 hover:text-emerald-800 font-black text-base sm:text-lg rounded-2xl shadow-xl transition-all transform hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2.5"
+            >
+              <Play className="w-5 h-5 fill-emerald-600" />
+              <span>LANJUTKAN</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* 4. Featured Mini Games Showcase */}
+      {/* 3. QUICK STATS (Compact Stat Cards below Hero) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard
+          icon={<Star className="w-5 h-5 text-amber-500 fill-amber-400" />}
+          label="Total XP"
+          value={`${activeProfile.xp.toLocaleString()} XP`}
+          highlightColor="amber"
+          subtext={`Menuju Lv.${levelInfo.level + 1}`}
+        />
+
+        <StatCard
+          icon={<Flame className="w-5 h-5 text-rose-500 fill-rose-500" />}
+          label="Streak Latihan"
+          value={`${activeProfile.streak} Hari`}
+          highlightColor="rose"
+          subtext="Tetap konsisten!"
+        />
+
+        <StatCard
+          icon={<Trophy className="w-5 h-5 text-emerald-600" />}
+          label="Level Kamu"
+          value={`Level ${levelInfo.level}`}
+          highlightColor="green"
+          subtext={levelInfo.title}
+        />
+
+        <StatCard
+          icon={<CheckCircle2 className="w-5 h-5 text-sky-600" />}
+          label="Akurasi Jawaban"
+          value={`${accuracyScore}%`}
+          highlightColor="blue"
+          subtext="Sangat Baik"
+        />
+      </div>
+
+      {/* 4. CONTINUE LEARNING CARD */}
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-13 h-13 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center text-2xl flex-shrink-0">
+            📘
+          </div>
+          <div className="space-y-1">
+            <span className="text-xs font-black uppercase tracking-wider text-slate-400">
+              Lanjutkan Belajar
+            </span>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-black text-slate-900">{lastTopicName}</h3>
+              <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                {lastTopicProgress}% Selesai
+              </span>
+            </div>
+            <div className="w-48 sm:w-64 bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-amber-500 h-full rounded-full transition-all duration-500"
+                style={{ width: `${lastTopicProgress}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={() => {
+            sound.playClick();
+            onNavigateTab('workbook');
+          }}
+          className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-2xl shadow-xs hover:shadow-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 self-start sm:self-auto"
+        >
+          <span>LANJUTKAN →</span>
+        </button>
+      </div>
+
+      {/* 5. RECOMMENDED PRACTICE: ✨ Rekomendasi Untukmu */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Gamepad2 className="w-5 h-5 text-orange-600" />
-            <h3 className="text-base sm:text-lg font-black text-slate-800">
-              🎮 Arena Mini Game Pilihan
+            <Sparkles className="w-5 h-5 text-amber-500" />
+            <h3 className="text-lg sm:text-xl font-black text-slate-900">
+              Rekomendasi Untukmu
             </h3>
           </div>
           <button
-            onClick={() => onNavigateTab('game')}
-            className="text-xs font-black text-orange-600 hover:text-orange-700 flex items-center gap-1 cursor-pointer"
+            onClick={() => onNavigateTab('workbook')}
+            className="text-xs font-black text-emerald-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer"
           >
-            <span>Lihat Semua Game</span>
+            <span>Buka Semua Latihan</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Card 1: Penjumlahan */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:border-emerald-300 transition-all flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-black">
+                  ➕
+                </span>
+                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Mudah
+                </span>
+              </div>
+              <h4 className="font-extrabold text-base text-slate-900">Penjumlahan</h4>
+              <p className="text-xs text-slate-500 mt-1">10 soal latihan teknik menyimpan & berhitung cepat.</p>
+            </div>
+            <button
+              onClick={() => {
+                sound.playClick();
+                onNavigateTab('workbook');
+              }}
+              className="mt-4 pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-black text-emerald-600 hover:text-emerald-700 cursor-pointer"
+            >
+              <span>Mulai Latihan (10 Soal)</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Card 2: Perkalian */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:border-amber-300 transition-all flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-black">
+                  ✖️
+                </span>
+                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                  Sedang
+                </span>
+              </div>
+              <h4 className="font-extrabold text-base text-slate-900">Perkalian</h4>
+              <p className="text-xs text-slate-500 mt-1">15 soal tabel perkalian dasar dan bersusun.</p>
+            </div>
+            <button
+              onClick={() => {
+                sound.playClick();
+                onNavigateTab('workbook');
+              }}
+              className="mt-4 pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-black text-amber-600 hover:text-amber-700 cursor-pointer"
+            >
+              <span>Mulai Latihan (15 Soal)</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Card 3: Soal Cerita */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:border-sky-300 transition-all flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="w-10 h-10 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl font-black">
+                  📖
+                </span>
+                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
+                  Sedang
+                </span>
+              </div>
+              <h4 className="font-extrabold text-base text-slate-900">Soal Cerita</h4>
+              <p className="text-xs text-slate-500 mt-1">10 soal cerita kontekstual kehidupan sehari-hari.</p>
+            </div>
+            <button
+              onClick={() => {
+                sound.playClick();
+                onNavigateTab('workbook');
+              }}
+              className="mt-4 pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-black text-sky-600 hover:text-sky-700 cursor-pointer"
+            >
+              <span>Mulai Latihan (10 Soal)</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 6. MATH SKILLS GRID (MATERI MATEMATIKA) */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-black text-slate-500 uppercase tracking-wider">
+            MATERI MATEMATIKA
+          </h3>
+          <span className="text-xs font-bold text-slate-400">10 Topik Kurikulum SD</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+          {MATH_SKILLS.map((skill) => (
+            <button
+              key={skill.id}
+              onClick={() => {
+                sound.playClick();
+                onNavigateTab('workbook');
+              }}
+              className="bg-white rounded-2xl p-3.5 border border-slate-200/80 hover:border-emerald-300 hover:shadow-sm text-left transition-all active:scale-95 cursor-pointer flex flex-col justify-between group"
+            >
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-2xl group-hover:scale-110 transition-transform">
+                  {skill.icon}
+                </span>
+                <span className="text-[10px] font-bold text-slate-400">
+                  {skill.progress}%
+                </span>
+              </div>
+              <span className="font-extrabold text-xs sm:text-sm text-slate-900 group-hover:text-emerald-600 transition-colors">
+                {skill.title}
+              </span>
+              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-2">
+                <div
+                  className="bg-emerald-500 h-full rounded-full transition-all"
+                  style={{ width: `${skill.progress}%` }}
+                />
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 7. QUICK ACCESS TO MINI-GAMES & ASSESSMENT MODES */}
+      <div className="bg-slate-50 rounded-3xl p-5 sm:p-6 border border-slate-200/80 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Gamepad2 className="w-5 h-5 text-purple-600" />
+            <h3 className="font-black text-slate-900 text-sm sm:text-base">
+              Game Matematika Pilihan
+            </h3>
+          </div>
+          <button
+            onClick={() => onNavigateTab('game')}
+            className="text-xs font-black text-purple-600 hover:text-purple-700 flex items-center gap-1 cursor-pointer"
+          >
+            <span>Buka Game Center</span>
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {featuredGames.map((game) => (
             <div
               key={game.id}
@@ -430,100 +436,28 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 sound.playClick();
                 onLaunchMinigame(game.id);
               }}
-              className="bg-white rounded-3xl p-4 border-2 border-slate-200 hover:border-amber-400 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+              className="bg-white rounded-2xl p-4 border border-slate-200 hover:border-purple-300 hover:shadow-sm transition-all cursor-pointer group flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform shadow-2xs">
+                  <span className="text-3xl group-hover:scale-110 transition-transform">
                     {game.icon}
-                  </div>
-                  <span className="text-[10px] font-black bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
+                  </span>
+                  <span className="text-[10px] font-extrabold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">
                     {game.tag}
                   </span>
                 </div>
-                <h4 className="font-black text-slate-800 text-sm group-hover:text-orange-600 transition-colors">
+                <h4 className="font-extrabold text-sm text-slate-900 group-hover:text-purple-600 transition-colors">
                   {game.title}
                 </h4>
-                <p className="text-[11px] text-slate-500 font-medium mt-1 leading-snug">
-                  {game.desc}
-                </p>
+                <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">{game.desc}</p>
               </div>
 
-              <div className="mt-4 pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-black text-orange-600">
-                <span>Main Sekarang</span>
-                <Play className="w-3.5 h-3.5 fill-orange-600" />
+              <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-black text-purple-600">
+                <span>Mainkan</span>
+                <Play className="w-3.5 h-3.5 fill-purple-600" />
               </div>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 5. Rekomendasi Latihan (Adaptive Learning Highlights) */}
-      <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-5 sm:p-6 border-2 border-amber-200 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">💡</span>
-            <div>
-              <h3 className="font-black text-slate-800 text-sm sm:text-base">
-                Rekomendasi Latihan Hari Ini
-              </h3>
-              <p className="text-xs text-slate-500 font-medium">
-                Disesuaikan untuk mengasah kemampuan {activeGradeMeta.label}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => onNavigateTab('progress')}
-            className="text-xs font-black text-orange-600 hover:text-orange-700 cursor-pointer"
-          >
-            Lihat Statistik
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {[
-            {
-              title: 'Operasi Hitung Kilat',
-              desc: 'Asah ketangkasan tambah dan kurang cepat.',
-              icon: '⚡',
-              topicId: 'fase_a_penjumlahan',
-            },
-            {
-              title: 'Pola Bilangan & Angka',
-              desc: 'Tebak urutan dan kelipatan angka tersembunyi.',
-              icon: '🔢',
-              topicId: 'fondasi_angka',
-            },
-            {
-              title: 'Soal Cerita Sehari-hari',
-              desc: 'Latihan logika belanja dan pembagian adil.',
-              icon: '📖',
-              topicId: 'fase_a_uang_waktu',
-            },
-          ].map((item, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                sound.playClick();
-                onStartQuickQuestion(item.topicId);
-              }}
-              className="p-4 rounded-2xl bg-white hover:bg-amber-100/50 border-2 border-amber-200 text-left transition-all cursor-pointer flex items-center justify-between group shadow-2xs hover:shadow-xs"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl group-hover:scale-110 transition-transform">
-                  {item.icon}
-                </span>
-                <div>
-                  <h4 className="font-black text-xs sm:text-sm text-slate-800">
-                    {item.title}
-                  </h4>
-                  <p className="text-[10px] text-slate-500 font-medium leading-tight mt-0.5">
-                    {item.desc}
-                  </p>
-                </div>
-              </div>
-              <ArrowRight className="w-4 h-4 text-orange-500 group-hover:translate-x-1 transition-transform flex-shrink-0" />
-            </button>
           ))}
         </div>
       </div>

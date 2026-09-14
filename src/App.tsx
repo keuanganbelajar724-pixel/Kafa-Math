@@ -46,13 +46,21 @@ import { FormulaHandbookModal } from './components/FormulaHandbookModal';
 // 5 Core Game Views & Modern Game Navigation
 import { WORLDS_DATA } from './data/worldsData';
 import { HomeView } from './components/views/HomeView';
+import { PracticeView } from './components/views/PracticeView';
 import { MapView } from './components/views/MapView';
 import { GameView } from './components/views/GameView';
 import { ProgressView } from './components/views/ProgressView';
 import { ProfileView } from './components/views/ProfileView';
 import { BottomNavigation, MainTabType } from './components/BottomNavigation';
+import { DesktopSidebar } from './components/DesktopSidebar';
 import { LevelChallengeModal } from './components/LevelChallengeModal';
 import { DailyChallengeModal } from './components/DailyChallengeModal';
+import { DigitalWorkbookView } from './components/workbook/DigitalWorkbookView';
+import { ExamModeModal } from './components/workbook/ExamModeModal';
+import { QuickMathModal } from './components/workbook/QuickMathModal';
+import { MistakesReviewModal } from './components/workbook/MistakesReviewModal';
+import { loadMistakes, resolveMistake } from './services/storage';
+import { getStoredLanguage, saveStoredLanguage, Language } from './services/i18n';
 
 // Minigames
 import { MakanKerupukGame } from './components/minigames/MakanKerupukGame';
@@ -88,6 +96,7 @@ import { PanBalanceAlgebraGame } from './components/minigames/PanBalanceAlgebraG
 import { AngleProtractorLabGame } from './components/minigames/AngleProtractorLabGame';
 import { VennDiagramSorterGame } from './components/minigames/VennDiagramSorterGame';
 import { GeoboardLabGame } from './components/minigames/GeoboardLabGame';
+import { TwentyNewGamesRouter, TWENTY_NEW_GAME_IDS } from './components/minigames/TwentyNewGamesRouter';
 
 export const App: React.FC = () => {
   // Profiles and Settings
@@ -121,10 +130,22 @@ export const App: React.FC = () => {
   const [showMathDuel, setShowMathDuel] = useState<boolean>(false);
   const [showFormulaHandbook, setShowFormulaHandbook] = useState<boolean>(false);
 
-  // Active Main Navigation Tab (Home, Map, Game, Progress, Profile)
+  // Digital Workbook & Assessment Modals
+  const [showExamMode, setShowExamMode] = useState<boolean>(false);
+  const [showQuickMath, setShowQuickMath] = useState<boolean>(false);
+  const [showMistakes, setShowMistakes] = useState<boolean>(false);
+
+  // Active Main Navigation Tab (Home, Workbook, Map, Game, Progress, Profile)
   const [mainTab, setMainTab] = useState<MainTabType>('home');
   const [selectedLevelNode, setSelectedLevelNode] = useState<MapNode | null>(null);
   const [showDailyChallenge, setShowDailyChallenge] = useState<boolean>(false);
+  const [currentLanguage, setCurrentLanguage] = useState<Language>(() => getStoredLanguage());
+
+  const handleToggleLanguage = () => {
+    const nextLang = currentLanguage === 'id' ? 'en' : 'id';
+    setCurrentLanguage(nextLang);
+    saveStoredLanguage(nextLang);
+  };
 
   // Session time tracker (minutes)
   const [sessionMinutes, setSessionMinutes] = useState<number>(0);
@@ -382,79 +403,121 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50/60 via-orange-50/30 to-amber-100/40 text-slate-900 font-sans selection:bg-orange-200">
-      {/* Top Navbar */}
-      <Navbar
+    <div className="min-h-screen bg-slate-50/60 flex text-slate-900 font-sans selection:bg-emerald-200">
+      {/* Desktop Sidebar (visible on md screens and up) */}
+      <DesktopSidebar
+        activeTab={mainTab}
+        onChangeTab={(tab) => setMainTab(tab)}
         activeProfile={activeProfile}
         parentSettings={parentSettings}
-        onNavigateHome={() => setMainTab('home')}
-        onOpenProfiles={() => setShowProfilesModal(true)}
         onOpenParentDashboard={() => setShowParentDashboard(true)}
         onOpenShop={() => setShowShop(true)}
-        onOpenAITutor={() => setShowAITutor(true)}
-        onOpenMathLab={() => setShowMathLab(true)}
-        onOpenExamSimulation={() => setShowExamSimulation(true)}
-        onOpenMathDuel={() => setShowMathDuel(true)}
-        onOpenFormulaHandbook={() => setShowFormulaHandbook(true)}
-        onOpenWorksheets={() => setShowWorksheetGenerator(true)}
         onToggleVoice={() =>
           setParentSettings((prev) => ({ ...prev, voiceOverEnabled: !prev.voiceOverEnabled }))
         }
+        currentLanguage={currentLanguage}
+        onToggleLanguage={handleToggleLanguage}
       />
 
-      {/* Main Content Area: 5 Modern Game Views */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-5">
-        {mainTab === 'home' && (
-          <HomeView
-            activeProfile={activeProfile}
-            onContinueLearning={handleContinueLearning}
-            onOpenDailyChallenge={() => setShowDailyChallenge(true)}
-            onNavigateTab={(tab) => setMainTab(tab)}
-            onLaunchMinigame={handleLaunchGame}
-            onStartQuickQuestion={(topicId) => {
-              const q = generateQuestion(activeProfile.phase, topicId, 1);
-              setCurrentQuestion(q);
-            }}
-            onChangeGrade={handleChangeGrade}
-          />
-        )}
-        {mainTab === 'map' && (
-          <MapView
-            activeProfile={activeProfile}
-            onSelectNode={handleSelectNode}
-          />
-        )}
-        {mainTab === 'game' && (
-          <GameView
-            onLaunchMinigame={handleLaunchGame}
-          />
-        )}
-        {mainTab === 'progress' && (
-          <ProgressView
-            activeProfile={activeProfile}
-            onPracticeTopic={(topicId) => {
-              const q = generateQuestion(activeProfile.phase, topicId, 1);
-              setCurrentQuestion(q);
-            }}
-          />
-        )}
-        {mainTab === 'profile' && (
-          <ProfileView
-            activeProfile={activeProfile}
-            parentSettings={parentSettings}
-            onOpenProfiles={() => setShowProfilesModal(true)}
-            onOpenShop={() => setShowShop(true)}
-            onOpenParentDashboard={() => setShowParentDashboard(true)}
-            onChangeGrade={handleChangeGrade}
-          />
-        )}
-      </main>
+      {/* Main Container */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+        {/* Top Navbar */}
+        <Navbar
+          activeProfile={activeProfile}
+          parentSettings={parentSettings}
+          onNavigateHome={() => setMainTab('home')}
+          onOpenWorkbook={() => setMainTab('workbook')}
+          onOpenProfiles={() => setShowProfilesModal(true)}
+          onOpenParentDashboard={() => setShowParentDashboard(true)}
+          onOpenShop={() => setShowShop(true)}
+          onOpenAITutor={() => setShowAITutor(true)}
+          onOpenMathLab={() => setShowMathLab(true)}
+          onOpenExamSimulation={() => setShowExamMode(true)}
+          onOpenMathDuel={() => setShowMathDuel(true)}
+          onOpenFormulaHandbook={() => setShowFormulaHandbook(true)}
+          onOpenWorksheets={() => setShowWorksheetGenerator(true)}
+          onToggleVoice={() =>
+            setParentSettings((prev) => ({ ...prev, voiceOverEnabled: !prev.voiceOverEnabled }))
+          }
+          currentLanguage={currentLanguage}
+          onToggleLanguage={handleToggleLanguage}
+        />
 
-      {/* Touch-Friendly Bottom Navigation (Home, Map, Game, Progress, Profile) */}
-      <BottomNavigation
-        activeTab={mainTab}
-        onChangeTab={(tab) => setMainTab(tab)}
-      />
+        {/* Main Content Area: Modern Game & Workbook Views */}
+        <main className="max-w-7xl w-full mx-auto px-3 sm:px-6 py-5 flex-1">
+          {mainTab === 'home' && (
+            <HomeView
+              activeProfile={activeProfile}
+              onContinueLearning={() => setMainTab('workbook')}
+              onOpenDailyChallenge={() => setShowDailyChallenge(true)}
+              onNavigateTab={(tab) => setMainTab(tab)}
+              onLaunchMinigame={handleLaunchGame}
+              onStartQuickQuestion={(topicId) => {
+                const q = generateQuestion(activeProfile.phase, topicId, 1);
+                setCurrentQuestion(q);
+              }}
+              onChangeGrade={handleChangeGrade}
+              onOpenExamMode={() => setShowExamMode(true)}
+              onOpenQuickMath={() => setShowQuickMath(true)}
+              onOpenMistakes={() => setShowMistakes(true)}
+              onOpenWorksheets={() => setShowWorksheetGenerator(true)}
+            />
+          )}
+          {mainTab === 'workbook' && (
+            <PracticeView
+              activeProfile={activeProfile}
+              onRewardXP={handleRewardXP}
+              onAskAITutor={(question) => {
+                setShowAITutor(true);
+              }}
+              onOpenExamMode={() => setShowExamMode(true)}
+              onOpenQuickMath={() => setShowQuickMath(true)}
+              onOpenMistakes={() => setShowMistakes(true)}
+              onOpenWorksheets={() => setShowWorksheetGenerator(true)}
+            />
+          )}
+          {mainTab === 'map' && (
+            <MapView
+              activeProfile={activeProfile}
+              onSelectNode={handleSelectNode}
+            />
+          )}
+          {mainTab === 'game' && (
+            <GameView
+              activeProfile={activeProfile}
+              onLaunchMinigame={handleLaunchGame}
+              onRewardXP={handleRewardXP}
+            />
+          )}
+          {mainTab === 'progress' && (
+            <ProgressView
+              activeProfile={activeProfile}
+              onPracticeTopic={(topicId) => {
+                const q = generateQuestion(activeProfile.phase, topicId, 1);
+                setCurrentQuestion(q);
+              }}
+            />
+          )}
+          {mainTab === 'profile' && (
+            <ProfileView
+              activeProfile={activeProfile}
+              parentSettings={parentSettings}
+              onOpenProfiles={() => setShowProfilesModal(true)}
+              onOpenShop={() => setShowShop(true)}
+              onOpenParentDashboard={() => setShowParentDashboard(true)}
+              onChangeGrade={handleChangeGrade}
+            />
+          )}
+        </main>
+
+        {/* Touch-Friendly Bottom Navigation (Mobile & Tablet) */}
+        <div className="md:hidden">
+          <BottomNavigation
+            activeTab={mainTab}
+            onChangeTab={(tab) => setMainTab(tab)}
+          />
+        </div>
+      </div>
 
       {/* 10-CHALLENGE SERIAL LEVEL RUNNER MODAL */}
       {selectedLevelNode && (
@@ -831,8 +894,17 @@ export const App: React.FC = () => {
               />
             )}
 
+            {TWENTY_NEW_GAME_IDS.includes(activeMinigameId as any) && (
+              <TwentyNewGamesRouter
+                gameId={activeMinigameId!}
+                onComplete={handleMinigameComplete}
+                onExit={() => setActiveMinigameId(null)}
+              />
+            )}
+
             {/* Fallback to prevent blank screen if ID is unhandled */}
             {![
+              ...TWENTY_NEW_GAME_IDS,
               'cake_fraction_slicer', 'draw_line_match', 'place_value_blocks', 'ruler_measurement',
               'number_line_frog', 'tangram_symmetry', 'liquid_measuring_jug', 'barchart_builder',
               'pan_balance_scale', 'angle_protractor_lab', 'venn_diagram_sorter', 'geoboard_perimeter_area',
@@ -858,6 +930,39 @@ export const App: React.FC = () => {
             )}
           </div>
         </div>
+      )}
+
+      {/* Exam Mode Simulation Modal */}
+      {showExamMode && (
+        <ExamModeModal
+          activeProfile={activeProfile}
+          onClose={() => setShowExamMode(false)}
+          onRewardXP={handleRewardXP}
+        />
+      )}
+
+      {/* Quick Math Challenge Modal */}
+      {showQuickMath && (
+        <QuickMathModal
+          activeProfile={activeProfile}
+          onClose={() => setShowQuickMath(false)}
+          onRewardXP={handleRewardXP}
+        />
+      )}
+
+      {/* Mistakes Review Modal */}
+      {showMistakes && (
+        <MistakesReviewModal
+          mistakes={loadMistakes(activeProfile.id)}
+          childName={activeProfile.name}
+          onResolveMistake={(mistakeId) => {
+            resolveMistake(activeProfile.id, mistakeId);
+          }}
+          onRewardBonusXP={(xp) => {
+            handleRewardXP(xp, 1);
+          }}
+          onClose={() => setShowMistakes(false)}
+        />
       )}
     </div>
   );

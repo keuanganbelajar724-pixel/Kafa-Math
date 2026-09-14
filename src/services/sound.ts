@@ -106,6 +106,10 @@ class SoundService {
     this.playRetry();
   }
 
+  public playIncorrect() {
+    this.playRetry();
+  }
+
   // Play coin sound
   public playCoin() {
     if (!this.soundEnabled) return;
@@ -166,6 +170,10 @@ class SoundService {
         t += item.d * 0.85;
       });
     } catch (e) {}
+  }
+
+  public playCelebration() {
+    this.playFanfare();
   }
 
   // Play tactile click

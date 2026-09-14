@@ -200,7 +200,27 @@ export type MiniGameType =
   | 'pan_balance_scale'
   | 'angle_protractor_lab'
   | 'venn_diagram_sorter'
-  | 'geoboard_perimeter_area';
+  | 'geoboard_perimeter_area'
+  | 'abacus_soroban'
+  | 'carroll_diagram'
+  | 'thermometer_lab'
+  | 'coin_money_sorter'
+  | 'isometric_3d_builder'
+  | 'factor_tree_lab'
+  | 'prime_number_pop'
+  | 'magic_square_puzzle'
+  | 'rounding_mountain'
+  | 'dot_pattern_sequence'
+  | 'compass_bearings'
+  | 'time_duration_bus'
+  | 'speed_distance_time'
+  | 'weight_conversion_lift'
+  | 'mean_median_seesaw'
+  | 'fraction_decimal_percent'
+  | 'mirror_coordinates'
+  | 'congruent_shapes'
+  | 'ratio_recipe_mix'
+  | 'sudoku_mini_kids';
 
 export interface QuestionStrategy {
   id: string;
@@ -318,4 +338,104 @@ export interface WorksheetConfig {
   includeAnswers: boolean;
   studentName?: string;
   schoolName?: string;
+}
+
+// Digital Workbook & Question Generator Types
+export type WorkbookOperation =
+  | 'penjumlahan'
+  | 'pengurangan'
+  | 'perkalian'
+  | 'pembagian'
+  | 'campuran'
+  | 'cerita'
+  | 'nilai_tempat'
+  | 'pecahan'
+  | 'pengukuran'
+  | 'waktu'
+  | 'uang'
+  | 'geometri'
+  | 'data'
+  | 'pola'
+  | 'logika';
+
+export type WorkbookDifficulty = 'mudah' | 'sedang' | 'sulit';
+
+export type InternalDifficultyLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+
+export type MasteryTier = 'not_started' | 'learning' | 'practice' | 'mastered' | 'grandmaster';
+
+export interface VerticalMathFormat {
+  operand1: number | string;
+  operand2: number | string;
+  operator: '+' | '-' | '×' | '÷';
+  borrowOrCarry?: (number | string)[];
+  steps?: string[];
+  porogapitSteps?: { stepNumber: number; dividendPart: number; divisor: number; quotientDigit: number; remainder: number }[];
+}
+
+export interface GeneratedMathQuestion {
+  id: string;
+  hash: string;
+  operation: WorkbookOperation;
+  category: string;
+  subCategory: string;
+  gradeLevel: number; // 0 for PAUD/TK, 1-6 SD
+  difficultyLevel: InternalDifficultyLevel;
+  difficultyLabel: WorkbookDifficulty;
+  question: string;
+  numberSentence?: string; // e.g. "35 + 31"
+  answer: string;
+  acceptedAnswers?: string[];
+  explanation: string;
+  stepByStepSteps: string[];
+  hint: string;
+  verticalFormat?: VerticalMathFormat;
+  visualData?: any;
+  tags: string[];
+  storyContext?: {
+    characterName: string;
+    objectName: string;
+    quantity1: number;
+    quantity2: number;
+    scenario: string;
+  };
+}
+
+export interface WorkbookSavedAnswer {
+  questionId: string;
+  userAnswer: string;
+  isCorrect: boolean;
+  isAnswered: boolean;
+  attempts: number;
+  timestamp: number;
+}
+
+export interface MistakeItem {
+  id: string;
+  profileId: string;
+  question: GeneratedMathQuestion;
+  wrongAnswer: string;
+  dateAdded: string;
+  resolved: boolean;
+  timesWrong: number;
+}
+
+export interface ExamSessionResult {
+  id: string;
+  profileId: string;
+  date: string;
+  totalQuestions: number;
+  correctAnswers: number;
+  wrongAnswers: number;
+  score: number;
+  timeSpentSeconds: number;
+  strongestTopic: string;
+  needsPracticeTopic: string;
+}
+
+export interface QuickMathRecord {
+  durationSeconds: 30 | 60 | 120;
+  correctCount: number;
+  wrongCount: number;
+  bestScore: number;
 }
