@@ -27,6 +27,13 @@ import {
   RatioRecipeMixGame,
   SudokuMiniKidsGame,
 } from './LogicAdvancedPackGames';
+import {
+  OrderOfOperationsRunnerGame,
+  KpkFpbRocketRaceGame,
+  NegativeSubmarineGame,
+  CircleGeometryLabGame,
+  MeanMedianDetectiveGame,
+} from './MasteryCurriculumPackGames';
 
 export const TWENTY_NEW_GAME_IDS = [
   'abacus_soroban',
@@ -49,6 +56,11 @@ export const TWENTY_NEW_GAME_IDS = [
   'congruent_shapes',
   'ratio_recipe_mix',
   'sudoku_mini_kids',
+  'order_of_operations_runner',
+  'kpk_fpb_race',
+  'negative_number_submarine',
+  'circle_geometry_lab',
+  'mean_median_mode_detective',
 ] as const;
 
 export type TwentyNewGameId = (typeof TWENTY_NEW_GAME_IDS)[number];
@@ -108,6 +120,17 @@ export const TwentyNewGamesRouter: React.FC<TwentyNewGamesRouterProps> = ({
       return <RatioRecipeMixGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
     case 'sudoku_mini_kids':
       return <SudokuMiniKidsGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+
+    case 'order_of_operations_runner':
+      return <OrderOfOperationsRunnerGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+    case 'kpk_fpb_race':
+      return <KpkFpbRocketRaceGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+    case 'negative_number_submarine':
+      return <NegativeSubmarineGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+    case 'circle_geometry_lab':
+      return <CircleGeometryLabGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+    case 'mean_median_mode_detective':
+      return <MeanMedianDetectiveGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
 
     default:
       return null;

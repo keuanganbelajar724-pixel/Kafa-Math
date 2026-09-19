@@ -42,6 +42,7 @@ export const GameView: React.FC<GameViewProps> = ({
   // Categories list
   const CATEGORIES: { id: GameCategoryId; label: string; icon: string }[] = [
     { id: 'all', label: 'SEMUA', icon: '🌟' },
+    { id: 'cambridge', label: 'CAMBRIDGE PACK', icon: '🇬🇧' },
     { id: 'quick_math', label: 'QUICK MATH', icon: '⚡' },
     { id: 'logic', label: 'LOGIC', icon: '🧩' },
     { id: 'number', label: 'NUMBER', icon: '🔢' },
@@ -69,7 +70,11 @@ export const GameView: React.FC<GameViewProps> = ({
   // Launch a game
   const handleSelectGame = (game: GameMetadata) => {
     sound.playClick();
-    setActiveGame(game);
+    if (onLaunchMinigame && (game.gameNumber > 20 || game.category === 'cambridge')) {
+      onLaunchMinigame(game.id);
+    } else {
+      setActiveGame(game);
+    }
   };
 
   // Play next game
@@ -122,7 +127,7 @@ export const GameView: React.FC<GameViewProps> = ({
                 KAFA MATH GAME CENTER
               </span>
               <span className="text-xs font-extrabold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 hidden sm:inline">
-                20 Mini-Games
+                47 Mini-Games & Cambridge Pack
               </span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
@@ -133,64 +138,64 @@ export const GameView: React.FC<GameViewProps> = ({
             </p>
           </div>
 
-          {/* User Stats Chips */}
+          {/* Open Access Catalog Highlights */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            {/* Streak */}
-            <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 flex items-center gap-2.5 shadow-xs">
-              <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center font-black text-lg shrink-0">
-                🔥
+            {/* Total Games */}
+            <div className="p-3 rounded-2xl bg-purple-50 border border-purple-200 flex items-center gap-2.5 shadow-xs">
+              <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-black text-lg shrink-0">
+                🎮
               </div>
               <div>
-                <span className="text-[10px] font-bold text-rose-600 uppercase block leading-none">
-                  Streak
+                <span className="text-[10px] font-bold text-purple-600 uppercase block leading-none">
+                  Koleksi Game
                 </span>
                 <span className="text-base sm:text-lg font-black text-slate-900">
-                  {streak} Hari
+                  52+ Game
                 </span>
               </div>
             </div>
 
-            {/* XP */}
-            <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 flex items-center gap-2.5 shadow-xs">
-              <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-black text-lg shrink-0">
-                ⭐
+            {/* Cambridge Pack */}
+            <div className="p-3 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center gap-2.5 shadow-xs">
+              <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-lg shrink-0">
+                🇬🇧
               </div>
               <div>
-                <span className="text-[10px] font-bold text-amber-700 uppercase block leading-none">
-                  Total XP
+                <span className="text-[10px] font-bold text-indigo-700 uppercase block leading-none">
+                  Kurikulum
                 </span>
                 <span className="text-base sm:text-lg font-black text-slate-900">
-                  {xp.toLocaleString('id-ID')}
+                  Cambridge & SD
                 </span>
               </div>
             </div>
 
-            {/* Coins */}
-            <div className="p-3 rounded-2xl bg-yellow-50 border border-yellow-200 flex items-center gap-2.5 shadow-xs">
-              <div className="w-9 h-9 rounded-xl bg-yellow-100 text-yellow-700 flex items-center justify-center font-black text-lg shrink-0">
-                🪙
+            {/* Free Access */}
+            <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center gap-2.5 shadow-xs">
+              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-lg shrink-0">
+                ⚡
               </div>
               <div>
-                <span className="text-[10px] font-bold text-yellow-700 uppercase block leading-none">
-                  Koin
+                <span className="text-[10px] font-bold text-emerald-700 uppercase block leading-none">
+                  Akses Bebas
                 </span>
                 <span className="text-base sm:text-lg font-black text-slate-900">
-                  {coins.toLocaleString('id-ID')}
+                  100% Terbuka
                 </span>
               </div>
             </div>
 
-            {/* Level */}
+            {/* Grade levels */}
             <div className="p-3 rounded-2xl bg-sky-50 border border-sky-200 flex items-center gap-2.5 shadow-xs">
               <div className="w-9 h-9 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center font-black text-lg shrink-0">
-                🏆
+                🏫
               </div>
               <div>
                 <span className="text-[10px] font-bold text-sky-600 uppercase block leading-none">
-                  Peringkat
+                  Semua Jenjang
                 </span>
                 <span className="text-base sm:text-lg font-black text-slate-900">
-                  Level {level}
+                  Kelas 1 - 6 SD
                 </span>
               </div>
             </div>
@@ -199,7 +204,7 @@ export const GameView: React.FC<GameViewProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. DAILY CHALLENGE (TANTANGAN HARIAN)                                     */}
+      {/* 2. FEATURED GAME SPOTLIGHT (GAME PILIHAN HARI INI)                       */}
       {/* ========================================================================= */}
       <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-3xl p-5 sm:p-6 text-white shadow-lg relative overflow-hidden">
         {/* Background Sparkles Decor */}
@@ -211,64 +216,29 @@ export const GameView: React.FC<GameViewProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="bg-emerald-500/40 text-emerald-100 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-emerald-400/30">
-                TANTANGAN HARIAN
+                GAME PILIHAN EDUKATIF
               </span>
               <span className="text-xs text-emerald-200 font-bold">
-                Hari ini: Penjumlahan, Perkalian, Pecahan
+                Hari ini: Operasi KABATAKU, Balapan FPB/KPK & Pecahan
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-              🎯 3 Game Matematika Hari Ini!
+              🎯 Eksplorasi Permainan Matematika Favorit!
             </h2>
             <p className="text-xs sm:text-sm text-emerald-100 font-medium">
-              Selesaikan tantangan harian untuk mengamankan bonus XP dan melipatgandakan streak belajarmu.
+              Bebas pilih permainan mana saja untuk mengasah logika, daya ingat, spasial, dan kecepatan berhitung tanpa batas!
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 bg-emerald-800/50 p-3.5 rounded-2xl border border-emerald-500/30">
-            {/* Progress indicators: ✓ ✓ ○ */}
-            <div className="space-y-1">
-              <span className="text-[11px] font-bold text-emerald-200 block">
-                Progress: {dailyProgress.completed} / {dailyProgress.total} Selesai
-              </span>
-              <div className="flex items-center gap-2">
-                {Array.from({ length: dailyProgress.total }).map((_, idx) => {
-                  const isDone = idx < dailyProgress.completed;
-                  return (
-                    <div
-                      key={idx}
-                      className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs ${
-                        isDone
-                          ? 'bg-emerald-400 text-emerald-950 shadow-xs'
-                          : 'bg-emerald-900/70 text-emerald-300 border border-emerald-600/40'
-                      }`}
-                    >
-                      {isDone ? '✓' : '○'}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Reward */}
-            <div className="border-l border-emerald-500/40 pl-3.5 space-y-0.5">
-              <span className="text-[10px] font-bold text-emerald-300 block uppercase">Reward</span>
-              <div className="text-xs font-black text-amber-300 flex items-center gap-1.5">
-                <span>+50 XP</span>
-                <span>•</span>
-                <span>+20 🪙</span>
-              </div>
-            </div>
-
-            {/* CTA */}
+          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => {
                 sound.playClick();
                 handleSelectGame(GAME_CENTER_METADATA[0]); // Quick math
               }}
-              className="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-md transition-transform active:scale-95 cursor-pointer whitespace-nowrap"
+              className="px-6 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-sm shadow-md transition-transform active:scale-95 cursor-pointer whitespace-nowrap flex items-center gap-2"
             >
-              LANJUTKAN TANTANGAN ▶
+              <span>MAIN SEKARANG ▶</span>
             </button>
           </div>
         </div>

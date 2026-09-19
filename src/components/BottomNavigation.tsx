@@ -1,8 +1,8 @@
 import React from 'react';
-import { Home, BookOpen, Gamepad2, TrendingUp, User } from 'lucide-react';
+import { Home, Lightbulb, Gamepad2, BookOpen, Map } from 'lucide-react';
 import { sound } from '../services/sound';
 
-export type MainTabType = 'home' | 'workbook' | 'map' | 'game' | 'progress' | 'profile';
+export type MainTabType = 'home' | 'theory' | 'game' | 'workbook' | 'map';
 
 interface BottomNavigationProps {
   activeTab: MainTabType;
@@ -14,11 +14,11 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   onChangeTab,
 }) => {
   const tabs = [
-    { id: 'home' as MainTabType, label: 'Home', icon: Home },
-    { id: 'workbook' as MainTabType, label: 'Practice', icon: BookOpen },
+    { id: 'home' as MainTabType, label: 'Beranda', icon: Home },
+    { id: 'theory' as MainTabType, label: 'Materi', icon: Lightbulb },
     { id: 'game' as MainTabType, label: 'Games', icon: Gamepad2 },
-    { id: 'progress' as MainTabType, label: 'Progress', icon: TrendingUp },
-    { id: 'profile' as MainTabType, label: 'Profile', icon: User },
+    { id: 'workbook' as MainTabType, label: 'Latihan', icon: BookOpen },
+    { id: 'map' as MainTabType, label: 'Peta', icon: Map },
   ];
 
   return (

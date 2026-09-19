@@ -77,60 +77,53 @@ export const Navbar: React.FC<Props> = ({
             </div>
           </div>
 
-          {/* Active Profile Pill */}
-          <button
-            onClick={() => {
-              sound.playClick();
-              onOpenProfiles();
-            }}
-            className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2.5 py-1.5 rounded-2xl cursor-pointer transition-all active:scale-95"
-            title="Ganti Profil Anak"
+          {/* Active Grade Indicator */}
+          <div
+            className="flex items-center gap-1.5 bg-emerald-50/80 border border-emerald-200/80 px-2.5 py-1 rounded-xl"
+            title="Jenjang Matematika Aktif"
           >
-            <div className="w-6 h-6 rounded-full bg-amber-100 text-amber-800 font-black text-xs flex items-center justify-center">
-              {activeProfile.name.charAt(0)}
+            <div className="w-5 h-5 rounded-full bg-emerald-600 text-white font-black text-[10px] flex items-center justify-center">
+              🎓
             </div>
-            <div className="text-left leading-tight pr-1">
-              <span className="text-xs font-bold text-slate-800 block truncate max-w-[80px] sm:max-w-[120px]">
-                {activeProfile.name}
+            <div className="text-left leading-tight pr-0.5">
+              <span className="text-xs font-black text-slate-800 block truncate max-w-[100px] sm:max-w-[140px]">
+                {activeProfile.grade}
               </span>
-              <span className="text-[10px] text-emerald-600 font-extrabold">{activeProfile.grade}</span>
             </div>
-            <Users className="w-3.5 h-3.5 text-slate-400 hidden sm:inline" />
-          </button>
+          </div>
         </div>
 
-        {/* Stats & Quick Actions (Streak, Level, Coins, AI Tutor, Sound, Parent PIN) */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5">
-          {/* Streak */}
-          <div
-            className="flex items-center gap-1 bg-rose-50 border border-rose-200/80 px-2.5 py-1 rounded-xl shadow-2xs"
-            title={`Streak: ${activeProfile.streak} Hari`}
-          >
-            <Flame className="w-3.5 h-3.5 text-rose-500 fill-rose-500 animate-pulse" />
-            <span className="text-xs font-black text-rose-700">{activeProfile.streak}d</span>
-          </div>
+        {/* Quick Access & Utility (Knowledge, Game, AI Tutor, Language, Sound) */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Quick Knowledge Link */}
+          {onOpenFormulaHandbook && (
+            <button
+              onClick={() => {
+                sound.playClick();
+                onOpenFormulaHandbook();
+              }}
+              className="hidden md:flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2.5 py-1 rounded-xl border border-indigo-200 text-xs transition-all active:scale-95 cursor-pointer"
+              title="Pusat Pengetahuan & Teori"
+            >
+              <span>💡</span>
+              <span>Pengetahuan</span>
+            </button>
+          )}
 
-          {/* Level */}
-          <div
-            className="hidden sm:flex items-center gap-1.5 bg-amber-50 border border-amber-200/80 px-2.5 py-1 rounded-xl shadow-2xs"
-            title={`Level ${levelInfo.level}: ${levelInfo.title}`}
-          >
-            <Trophy className="w-3.5 h-3.5 text-amber-500" />
-            <span className="text-xs font-black text-amber-800">Lv.{levelInfo.level}</span>
-          </div>
-
-          {/* Coins */}
-          <button
-            onClick={() => {
-              sound.playClick();
-              onOpenShop();
-            }}
-            className="flex items-center gap-1 bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 px-2.5 py-1 rounded-xl shadow-2xs cursor-pointer transition-transform hover:scale-105 active:scale-95"
-            title="Toko Hadiah & Avatar"
-          >
-            <Coins className="w-3.5 h-3.5 text-yellow-600 fill-yellow-400" />
-            <span className="text-xs font-black text-yellow-800">{activeProfile.coins}</span>
-          </button>
+          {/* Quick Games Link */}
+          {onOpenMathLab && (
+            <button
+              onClick={() => {
+                sound.playClick();
+                onOpenMathLab();
+              }}
+              className="hidden md:flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold px-2.5 py-1 rounded-xl border border-purple-200 text-xs transition-all active:scale-95 cursor-pointer"
+              title="Bank Game Edukasi"
+            >
+              <span>🎮</span>
+              <span>Game Center</span>
+            </button>
+          )}
 
           {/* AI Tutor Button */}
           <button
@@ -178,18 +171,6 @@ export const Navbar: React.FC<Props> = ({
             ) : (
               <VolumeX className="w-3.5 h-3.5" />
             )}
-          </button>
-
-          {/* Parent Mode (Only on mobile/tablet since desktop has it in sidebar) */}
-          <button
-            onClick={() => {
-              sound.playClick();
-              onOpenParentDashboard();
-            }}
-            className="md:hidden p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl cursor-pointer transition-all active:scale-95"
-            title="Dashboard Orang Tua"
-          >
-            <Shield className="w-3.5 h-3.5 text-slate-700" />
           </button>
         </div>
       </div>

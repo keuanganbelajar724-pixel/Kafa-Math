@@ -46,11 +46,10 @@ import { FormulaHandbookModal } from './components/FormulaHandbookModal';
 // 5 Core Game Views & Modern Game Navigation
 import { WORLDS_DATA } from './data/worldsData';
 import { HomeView } from './components/views/HomeView';
+import { KnowledgeView } from './components/views/KnowledgeView';
 import { PracticeView } from './components/views/PracticeView';
 import { MapView } from './components/views/MapView';
 import { GameView } from './components/views/GameView';
-import { ProgressView } from './components/views/ProgressView';
-import { ProfileView } from './components/views/ProfileView';
 import { BottomNavigation, MainTabType } from './components/BottomNavigation';
 import { DesktopSidebar } from './components/DesktopSidebar';
 import { LevelChallengeModal } from './components/LevelChallengeModal';
@@ -417,6 +416,7 @@ export const App: React.FC = () => {
         }
         currentLanguage={currentLanguage}
         onToggleLanguage={handleToggleLanguage}
+        onChangeGrade={handleChangeGrade}
       />
 
       {/* Main Container */}
@@ -443,12 +443,12 @@ export const App: React.FC = () => {
           onToggleLanguage={handleToggleLanguage}
         />
 
-        {/* Main Content Area: Modern Game & Workbook Views */}
+        {/* Main Content Area: Modern Game & Knowledge Views */}
         <main className="max-w-7xl w-full mx-auto px-3 sm:px-6 py-5 flex-1">
           {mainTab === 'home' && (
             <HomeView
               activeProfile={activeProfile}
-              onContinueLearning={() => setMainTab('workbook')}
+              onContinueLearning={() => setMainTab('theory')}
               onOpenDailyChallenge={() => setShowDailyChallenge(true)}
               onNavigateTab={(tab) => setMainTab(tab)}
               onLaunchMinigame={handleLaunchGame}
@@ -461,6 +461,22 @@ export const App: React.FC = () => {
               onOpenQuickMath={() => setShowQuickMath(true)}
               onOpenMistakes={() => setShowMistakes(true)}
               onOpenWorksheets={() => setShowWorksheetGenerator(true)}
+            />
+          )}
+          {mainTab === 'theory' && (
+            <KnowledgeView
+              onOpenTopicPractice={(topicId) => {
+                const q = generateQuestion(activeProfile.phase, topicId as any, 1);
+                setCurrentQuestion(q);
+              }}
+              onLaunchGame={handleLaunchGame}
+            />
+          )}
+          {mainTab === 'game' && (
+            <GameView
+              activeProfile={activeProfile}
+              onLaunchMinigame={handleLaunchGame}
+              onRewardXP={handleRewardXP}
             />
           )}
           {mainTab === 'workbook' && (
@@ -480,32 +496,6 @@ export const App: React.FC = () => {
             <MapView
               activeProfile={activeProfile}
               onSelectNode={handleSelectNode}
-            />
-          )}
-          {mainTab === 'game' && (
-            <GameView
-              activeProfile={activeProfile}
-              onLaunchMinigame={handleLaunchGame}
-              onRewardXP={handleRewardXP}
-            />
-          )}
-          {mainTab === 'progress' && (
-            <ProgressView
-              activeProfile={activeProfile}
-              onPracticeTopic={(topicId) => {
-                const q = generateQuestion(activeProfile.phase, topicId, 1);
-                setCurrentQuestion(q);
-              }}
-            />
-          )}
-          {mainTab === 'profile' && (
-            <ProfileView
-              activeProfile={activeProfile}
-              parentSettings={parentSettings}
-              onOpenProfiles={() => setShowProfilesModal(true)}
-              onOpenShop={() => setShowShop(true)}
-              onOpenParentDashboard={() => setShowParentDashboard(true)}
-              onChangeGrade={handleChangeGrade}
             />
           )}
         </main>
