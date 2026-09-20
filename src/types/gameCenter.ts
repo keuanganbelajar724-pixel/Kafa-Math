@@ -1,5 +1,6 @@
 export type GameCategoryId =
   | 'all'
+  | 'grade1'
   | 'cambridge'
   | 'quick_math'
   | 'logic'

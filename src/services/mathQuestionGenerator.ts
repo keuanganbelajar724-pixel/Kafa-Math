@@ -155,12 +155,22 @@ export class MathQuestionGenerator {
   ): GeneratedMathQuestion {
     let a = 0;
     let b = 0;
+    let isGradeOneVisual = false;
+    let visualEmoji = '🍎';
 
-    if (level <= 2) {
-      // Basic 1-20 (No carry)
-      a = Math.floor(Math.random() * 9) + 1;
-      b = Math.floor(Math.random() * (9 - (a % 10))) + 1;
-      if (a + b < 5) b += 5;
+    if (grade === 1 || level <= 2) {
+      // Basic 1-20 (Grade 1 Friendly)
+      if (grade === 1) {
+        a = Math.floor(Math.random() * 9) + 1; // 1-9
+        b = Math.floor(Math.random() * (19 - a)) + 1; // sum <= 20
+        const fruits = ['🍎', '🍓', '🍊', '🍌', '⭐', '🎈'];
+        visualEmoji = fruits[Math.floor(Math.random() * fruits.length)];
+        isGradeOneVisual = Math.random() > 0.4 && a <= 5 && b <= 5;
+      } else {
+        a = Math.floor(Math.random() * 9) + 1;
+        b = Math.floor(Math.random() * (9 - (a % 10))) + 1;
+        if (a + b < 5) b += 5;
+      }
     } else if (level <= 4) {
       // 2-digit, minimal carry (e.g. 23 + 45)
       a = Math.floor(Math.random() * 40) + 11;
@@ -210,18 +220,22 @@ export class MathQuestionGenerator {
       hash,
       operation: 'penjumlahan',
       category: 'Aritmatika',
-      subCategory: level <= 3 ? 'Penjumlahan Dasar' : 'Penjumlahan Bersusun Menyimpan',
+      subCategory: grade === 1 ? 'Penjumlahan Ceria Bilangan 1-20' : level <= 3 ? 'Penjumlahan Dasar' : 'Penjumlahan Bersusun Menyimpan',
       gradeLevel: grade,
       difficultyLevel: level,
       difficultyLabel,
-      question: `Hitunglah hasil dari ${numberSentence}!`,
+      question: isGradeOneVisual
+        ? `Berapa jumlah benda berikut: ${visualEmoji.repeat(a)} + ${visualEmoji.repeat(b)} = ... ? (${a} + ${b})`
+        : grade === 1
+        ? `Hitunglah penjumlahan ceria: ${numberSentence} = ... ?`
+        : `Hitunglah hasil dari ${numberSentence}!`,
       numberSentence,
       answer: String(answer),
       explanation: `Langkah: ${a} + ${b} = ${answer}. Mulai dengan menjumlahkan digit satuan paling kanan, lalu simpan jika melebihi 9.`,
       stepByStepSteps: steps,
-      hint: `Coba jumlahkan digit satuan (${aOnes} + ${bOnes}) terlebih dahulu.`,
+      hint: grade === 1 ? `Hitung maju dari angka ${Math.max(a, b)} sebanyak ${Math.min(a, b)} langkah.` : `Coba jumlahkan digit satuan (${aOnes} + ${bOnes}) terlebih dahulu.`,
       verticalFormat,
-      tags: ['penjumlahan', 'bersusun', 'aritmatika'],
+      tags: grade === 1 ? ['penjumlahan', 'kelas_1', 'aritmatika_dasar', 'benda_konkret'] : ['penjumlahan', 'bersusun', 'aritmatika'],
     };
   }
 
@@ -235,8 +249,13 @@ export class MathQuestionGenerator {
   ): GeneratedMathQuestion {
     let a = 0;
     let b = 0;
+    let isGradeOneStory = false;
 
-    if (level <= 2) {
+    if (grade === 1) {
+      a = Math.floor(Math.random() * 10) + 7; // 7-16
+      b = Math.floor(Math.random() * (a - 2)) + 1;
+      isGradeOneStory = Math.random() > 0.4;
+    } else if (level <= 2) {
       // Under 20, no borrowing
       a = Math.floor(Math.random() * 10) + 10;
       b = Math.floor(Math.random() * (a % 10 + 1));
@@ -291,18 +310,22 @@ export class MathQuestionGenerator {
       hash,
       operation: 'pengurangan',
       category: 'Aritmatika',
-      subCategory: needsBorrow ? 'Pengurangan Meminjam' : 'Pengurangan Tanpa Meminjam',
+      subCategory: grade === 1 ? 'Pengurangan Ceria Bilangan 1-20' : needsBorrow ? 'Pengurangan Meminjam' : 'Pengurangan Tanpa Meminjam',
       gradeLevel: grade,
       difficultyLevel: level,
       difficultyLabel,
-      question: `Berapakah hasil dari ${numberSentence}?`,
+      question: isGradeOneStory
+        ? `Di keranjang ada ${a} buah jeruk 🍊. Dimakan oleh adik sebanyak ${b} buah. Berapa sisa buah jeruk sekarang?`
+        : grade === 1
+        ? `Berapakah hasil pengurangan: ${numberSentence} = ... ?`
+        : `Berapakah hasil dari ${numberSentence}?`,
       numberSentence,
       answer: String(answer),
       explanation: `Langkah: ${a} - ${b} = ${answer}.${needsBorrow ? ' Ingat untuk meminjam 1 puluhan (bernilai 10) jika angka atas lebih kecil.' : ''}`,
       stepByStepSteps: steps,
-      hint: needsBorrow ? `Perhatikan angka satuan: pinjam 1 dari puluhan.` : `Kurangkan angka satuan terlebih dahulu.`,
+      hint: grade === 1 ? `Hitung mundur dari ${a} sebanyak ${b} langkah.` : needsBorrow ? `Perhatikan angka satuan: pinjam 1 dari puluhan.` : `Kurangkan angka satuan terlebih dahulu.`,
       verticalFormat,
-      tags: ['pengurangan', 'bersusun', 'meminjam'],
+      tags: grade === 1 ? ['pengurangan', 'kelas_1', 'aritmatika_dasar', 'hitung_mundur'] : ['pengurangan', 'bersusun', 'meminjam'],
     };
   }
 
@@ -601,6 +624,58 @@ export class MathQuestionGenerator {
     grade: number,
     num: number
   ): GeneratedMathQuestion {
+    if (grade === 1) {
+      const valG1 = Math.floor(Math.random() * 9) + 11; // 11 - 19
+      const satuanG1 = valG1 % 10;
+      const typeG1 = Math.floor(Math.random() * 2);
+
+      if (typeG1 === 0) {
+        return {
+          id,
+          hash: `pv_g1_${valG1}_decompose`,
+          operation: 'nilai_tempat',
+          category: 'Bilangan',
+          subCategory: 'Nilai Tempat Puluhan & Satuan',
+          gradeLevel: 1,
+          difficultyLevel: level,
+          difficultyLabel,
+          question: `1 puluhan + ${satuanG1} satuan = ... ?`,
+          numberSentence: `10 + ${satuanG1} = ...`,
+          answer: String(valG1),
+          explanation: `1 puluhan bernilai 10, ditambah ${satuanG1} satuan bernilai ${satuanG1}. Jadi 10 + ${satuanG1} = ${valG1}.`,
+          stepByStepSteps: [
+            `1. 1 puluhan = 10.`,
+            `2. ${satuanG1} satuan = ${satuanG1}.`,
+            `3. Jumlahkan: 10 + ${satuanG1} = ${valG1}.`
+          ],
+          hint: `Ingat bahwa 1 puluhan adalah 10. Tambahkan dengan ${satuanG1}.`,
+          tags: ['nilai_tempat', 'puluhan', 'satuan', 'kelas_1'],
+        };
+      } else {
+        return {
+          id,
+          hash: `pv_g1_${valG1}_satuan`,
+          operation: 'nilai_tempat',
+          category: 'Bilangan',
+          subCategory: 'Mengenal Digit Satuan',
+          gradeLevel: 1,
+          difficultyLevel: level,
+          difficultyLabel,
+          question: `Pada bilangan ${valG1}, angka berapakah yang menempati nilai tempat SATUAN?`,
+          numberSentence: `${valG1} = 1 puluhan + ... satuan`,
+          answer: String(satuanG1),
+          explanation: `Pada bilangan ${valG1}, angka 1 di depan adalah puluhan dan angka ${satuanG1} di belakang adalah satuan.`,
+          stepByStepSteps: [
+            `1. Angka puluhan di sebelah kiri: 1.`,
+            `2. Angka satuan di sebelah kanan: ${satuanG1}.`,
+            `3. Jawaban yang menempati satuan adalah ${satuanG1}.`
+          ],
+          hint: `Satuan berada di posisi paling kanan (belakang).`,
+          tags: ['nilai_tempat', 'puluhan', 'satuan', 'kelas_1'],
+        };
+      }
+    }
+
     const val = level <= 3
       ? Math.floor(Math.random() * 90) + 10
       : level <= 6
@@ -1108,6 +1183,63 @@ export class MathQuestionGenerator {
     grade: number,
     num: number
   ): GeneratedMathQuestion {
+    if (grade === 1) {
+      const isVisualFruit = Math.random() > 0.5;
+      if (isVisualFruit) {
+        const pairs = [
+          { a: '🍎 (Apel)', b: '🍌 (Pisang)', ea: '🍎', eb: '🍌' },
+          { a: '🍓 (Stroberi)', b: '🍊 (Jeruk)', ea: '🍓', eb: '🍊' },
+          { a: '⭐ (Bintang)', b: '🎈 (Balon)', ea: '⭐', eb: '🎈' },
+        ];
+        const pair = pairs[Math.floor(Math.random() * pairs.length)];
+        return {
+          id,
+          hash: `pat_g1_visual_${pair.ea}_${pair.eb}`,
+          operation: 'pola',
+          category: 'Pola & Logika',
+          subCategory: 'Pola Gambar Berulang',
+          gradeLevel: 1,
+          difficultyLevel: level,
+          difficultyLabel,
+          question: `Perhatikan pola gambar berikut: ${pair.ea}, ${pair.eb}, ${pair.ea}, ${pair.eb}, ${pair.ea}, ... Gambar apakah selanjutnya?`,
+          answer: pair.b,
+          explanation: `Polanya bergantian antara ${pair.a} dan ${pair.b}. Setelah ${pair.a}, maka giliran berikutnya adalah ${pair.b}.`,
+          stepByStepSteps: [
+            `1. Amati pasangan yang berulang: ${pair.ea} lalu ${pair.eb}.`,
+            `2. Gambar terakhir sebelum titik-titik adalah ${pair.ea}.`,
+            `3. Maka gambar selanjutnya adalah ${pair.b}.`
+          ],
+          hint: `Lihat pola bergantian yang berulang-ulang.`,
+          tags: ['pola_gambar', 'pola_berulang', 'kelas_1'],
+        };
+      } else {
+        const stepG1 = Math.random() > 0.5 ? 1 : 2;
+        const startG1 = Math.floor(Math.random() * 5) + 1;
+        const seq = [startG1, startG1 + stepG1, startG1 + 2 * stepG1, startG1 + 3 * stepG1];
+        const nextG1 = startG1 + 4 * stepG1;
+        return {
+          id,
+          hash: `pat_g1_num_${startG1}_${stepG1}`,
+          operation: 'pola',
+          category: 'Pola & Logika',
+          subCategory: 'Pola Bilangan Loncat Ceria',
+          gradeLevel: 1,
+          difficultyLevel: level,
+          difficultyLabel,
+          question: `Perhatikan barisan bilangan: ${seq.join(', ')}, ... Berapakah angka selanjutnya?`,
+          answer: String(nextG1),
+          explanation: `Pola bilangan ini selalu melompat bertambah +${stepG1}. Jadi ${seq[3]} + ${stepG1} = ${nextG1}.`,
+          stepByStepSteps: [
+            `1. Cari loncatan angka: dari ${seq[0]} ke ${seq[1]} bertambah +${stepG1}.`,
+            `2. Angka terakhir adalah ${seq[3]}.`,
+            `3. Tambahkan ${seq[3]} + ${stepG1} = ${nextG1}.`
+          ],
+          hint: `Hitung berapa loncatan setiap angka (+${stepG1}).`,
+          tags: ['pola_bilangan', 'loncat', 'kelas_1'],
+        };
+      }
+    }
+
     const stepOptions = [2, 3, 4, 5, 10];
     const step = stepOptions[Math.floor(Math.random() * (level > 4 ? stepOptions.length : 3))];
     const start = Math.floor(Math.random() * 10) + 1;

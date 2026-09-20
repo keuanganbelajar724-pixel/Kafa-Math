@@ -18,6 +18,16 @@ import {
   Home,
   Award,
   Zap,
+  Volume2,
+  VolumeX,
+  Shield,
+  Snowflake,
+  Music,
+  Swords,
+  Timer,
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -37,6 +47,26 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
   // Game states: 'intro' | 'playing' | 'gameover' | 'completed'
   const [gameState, setGameState] = useState<'intro' | 'playing' | 'gameover' | 'completed'>('intro');
 
+  // Game Mode: 'adventure' | 'time_attack' | 'boss_battle'
+  const [gameMode, setGameMode] = useState<'adventure' | 'time_attack' | 'boss_battle'>('adventure');
+  const [bossHp, setBossHp] = useState<number>(500);
+  const bossMaxHp = 500;
+
+  // Power-Ups
+  const [freezeAvailable, setFreezeAvailable] = useState<boolean>(true);
+  const [freezeActive, setFreezeActive] = useState<boolean>(false);
+  const [eliminateAvailable, setEliminateAvailable] = useState<boolean>(true);
+  const [eliminatedOptions, setEliminatedOptions] = useState<string[]>([]);
+  const [shieldAvailable, setShieldAvailable] = useState<boolean>(true);
+  const [shieldActive, setShieldActive] = useState<boolean>(false);
+
+  // Background Music & Interactive Review
+  const [isBgmOn, setIsBgmOn] = useState<boolean>(false);
+  const [showReview, setShowReview] = useState<boolean>(false);
+  const [roundHistory, setRoundHistory] = useState<
+    Array<{ round: number; question: string; isCorrect: boolean; explanation?: string }>
+  >([]);
+
   // Stats
   const [score, setScore] = useState<number>(0);
   const [hearts, setHearts] = useState<number>(3);
@@ -44,7 +74,12 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
   const [combo, setCombo] = useState<number>(0);
   const [maxCombo, setMaxCombo] = useState<number>(0);
   const [round, setRound] = useState<number>(1);
-  const totalRounds = 5;
+  const totalRounds = gameMode === 'time_attack' ? 12 : 5;
+
+  // World-Class Game Polish & Feedback States
+  const [isShaking, setIsShaking] = useState<boolean>(false);
+  const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [floatingScore, setFloatingScore] = useState<{ id: number; text: string } | null>(null);
 
   // Feedback & Hint
   const [showHint, setShowHint] = useState<boolean>(false);
@@ -112,6 +147,9 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
 
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
+        if (prev <= 4 && prev > 1) {
+          sound.playTick(true);
+        }
         if (prev <= 1) {
           clearInterval(timerRef.current);
           handleTimeExpired();
@@ -125,6 +163,9 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
   const handleTimeExpired = () => {
     if (gameState !== 'playing') return;
     sound.playIncorrect();
+    sound.playHaptic('warning');
+    setIsShaking(true);
+    setTimeout(() => setIsShaking(false), 450);
     setCombo(0);
 
     if (game.hasHearts) {
@@ -162,10 +203,12 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
     if (timerRef.current) clearInterval(timerRef.current);
 
     if (isCorrect) {
-      sound.playCorrect();
       const newCombo = combo + 1;
       setCombo(newCombo);
       if (newCombo > maxCombo) setMaxCombo(newCombo);
+
+      // World-class combo audio synthesis
+      sound.playCombo(newCombo);
 
       // Speed bonus
       const speedBonus = game.hasTimer ? timeLeft * 5 : 20;
@@ -173,9 +216,16 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
       const pointsEarned = 100 * comboMultiplier + speedBonus;
       setScore((prev) => prev + pointsEarned);
 
+      // Trigger floating score tag
+      setFloatingScore({
+        id: Date.now(),
+        text: newCombo > 1 ? `+${pointsEarned} PTS (x${newCombo} COMBO!) 🔥` : `+${pointsEarned} PTS! ⭐`,
+      });
+      setTimeout(() => setFloatingScore(null), 1000);
+
       confetti({
-        particleCount: 25,
-        spread: 50,
+        particleCount: newCombo > 2 ? 40 : 25,
+        spread: newCombo > 2 ? 70 : 50,
         origin: { y: 0.7 },
       });
 
@@ -190,6 +240,9 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
       }, 1400);
     } else {
       sound.playIncorrect();
+      sound.playHaptic('warning');
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 450);
       setCombo(0);
 
       let nextHearts = hearts;
@@ -777,8 +830,20 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
           )}
         </div>
 
-        {/* Right: Timer & Round */}
+        {/* Right: Sound, Timer & Round */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const next = !isMuted;
+              setIsMuted(next);
+              sound.setSoundEnabled(!next);
+            }}
+            className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+            title={isMuted ? 'Aktifkan Suara' : 'Bisukan Suara'}
+          >
+            {isMuted ? <VolumeX className="w-4 h-4 text-rose-500" /> : <Volume2 className="w-4 h-4 text-emerald-600" />}
+          </button>
+
           {game.hasTimer && (
             <div
               className={`flex items-center gap-1 px-2.5 py-1 rounded-xl border font-black text-xs ${
@@ -798,7 +863,40 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
       </div>
 
       {/* 3.2 MAIN QUESTION & PLAY INTERFACE */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden transition-all duration-300 min-h-[360px] flex flex-col justify-between">
+      <div
+        className={`bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden transition-all duration-300 min-h-[360px] flex flex-col justify-between ${
+          isShaking ? 'animate-game-shake ring-4 ring-rose-400' : ''
+        } ${combo >= 3 ? 'ring-2 ring-amber-300 shadow-lg shadow-amber-100' : ''}`}
+      >
+        {/* Floating score tag */}
+        {floatingScore && (
+          <div
+            key={floatingScore.id}
+            className="absolute top-6 left-1/2 -translate-x-1/2 z-30 pointer-events-none px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-emerald-500 text-white font-black text-sm sm:text-base shadow-xl animate-float-score"
+          >
+            {floatingScore.text}
+          </div>
+        )}
+
+        {/* Read-Aloud Voice Button */}
+        <div className="absolute top-4 right-4 z-20">
+          <button
+            onClick={() => {
+              let textToSpeak = '';
+              if (currentContent?.q) textToSpeak = currentContent.q;
+              else if (currentContent?.prompt) textToSpeak = currentContent.prompt;
+              else if (currentContent?.seq) textToSpeak = `Lengkapi pola berikut: ${currentContent.seq}`;
+              else textToSpeak = `${game.title}. Ronde ${round} dari ${totalRounds}.`;
+              sound.speak(textToSpeak);
+            }}
+            className="p-2 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 shadow-2xs transition-all active:scale-95 cursor-pointer flex items-center gap-1 text-[11px] font-bold"
+            title="Dengarkan Soal / Narasi Suara"
+          >
+            <Volume2 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Suara</span>
+          </button>
+        </div>
+
         {/* Render specific game mechanic content */}
         <div>
           {/* QUICK MATH (Game 01) */}

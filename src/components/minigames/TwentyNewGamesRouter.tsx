@@ -34,6 +34,24 @@ import {
   CircleGeometryLabGame,
   MeanMedianDetectiveGame,
 } from './MasteryCurriculumPackGames';
+import {
+  FarmCountingBondsGame,
+  FruitTrainPatternGame,
+  StarBalanceCompareGame,
+  FrogJumpNumberlineGame,
+  FruitStorePlaceValueGame,
+  ShapesDetectiveQuestGame,
+  CatCastleClockGame,
+  MiniMarketCoinsGame,
+  RobotSpatialMazeGame,
+  JengkalMagicRulerGame,
+  PizzaFractionPartyGame,
+  ThermometerWeatherLabGame,
+} from './GradeOneInteractivePackGames';
+import {
+  AlgebraBalanceScaleGame,
+  CoordinateTreasureIslandGame,
+} from './WorldClassPackGames';
 
 export const TWENTY_NEW_GAME_IDS = [
   'abacus_soroban',
@@ -61,6 +79,20 @@ export const TWENTY_NEW_GAME_IDS = [
   'negative_number_submarine',
   'circle_geometry_lab',
   'mean_median_mode_detective',
+  'farm_counting_bonds',
+  'fruit_train_pattern',
+  'star_balance_compare',
+  'frog_jump_numberline',
+  'fruit_store_place_value',
+  'shapes_detective_quest',
+  'cat_castle_clock',
+  'mini_market_coins',
+  'robot_spatial_maze',
+  'jengkal_magic_ruler',
+  'pizza_fraction_party',
+  'thermometer_weather_lab',
+  'algebra_balance_scale',
+  'coordinate_treasure_island',
 ] as const;
 
 export type TwentyNewGameId = (typeof TWENTY_NEW_GAME_IDS)[number];
@@ -69,12 +101,14 @@ interface TwentyNewGamesRouterProps {
   gameId: string;
   onComplete: (score: number, stars: number) => void;
   onExit: () => void;
+  onRewardXP?: (xp: number, coins: number) => void;
 }
 
 export const TwentyNewGamesRouter: React.FC<TwentyNewGamesRouterProps> = ({
   gameId,
   onComplete,
   onExit,
+  onRewardXP = () => {},
 }) => {
   switch (gameId) {
     case 'abacus_soroban':
@@ -131,6 +165,35 @@ export const TwentyNewGamesRouter: React.FC<TwentyNewGamesRouterProps> = ({
       return <CircleGeometryLabGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
     case 'mean_median_mode_detective':
       return <MeanMedianDetectiveGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+
+    case 'farm_counting_bonds':
+      return <FarmCountingBondsGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+    case 'fruit_train_pattern':
+      return <FruitTrainPatternGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+    case 'star_balance_compare':
+      return <StarBalanceCompareGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+    case 'frog_jump_numberline':
+      return <FrogJumpNumberlineGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+    case 'fruit_store_place_value':
+      return <FruitStorePlaceValueGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+    case 'shapes_detective_quest':
+      return <ShapesDetectiveQuestGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+    case 'cat_castle_clock':
+      return <CatCastleClockGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+    case 'mini_market_coins':
+      return <MiniMarketCoinsGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+    case 'robot_spatial_maze':
+      return <RobotSpatialMazeGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+    case 'jengkal_magic_ruler':
+      return <JengkalMagicRulerGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+    case 'pizza_fraction_party':
+      return <PizzaFractionPartyGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+    case 'thermometer_weather_lab':
+      return <ThermometerWeatherLabGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
+    case 'algebra_balance_scale':
+      return <AlgebraBalanceScaleGame onExit={onExit} onRewardXP={onRewardXP} />;
+    case 'coordinate_treasure_island':
+      return <CoordinateTreasureIslandGame onExit={onExit} onRewardXP={onRewardXP} />;
 
     default:
       return null;

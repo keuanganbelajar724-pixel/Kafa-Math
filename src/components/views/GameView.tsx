@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ChildProfile } from '../../types';
 import { GameCategoryId, GameMetadata } from '../../types/gameCenter';
 import { GAME_CENTER_METADATA } from '../../data/gameCenterData';
@@ -14,6 +14,10 @@ import {
   Play,
   CheckCircle2,
   Award,
+  Search,
+  Dices,
+  Filter,
+  X,
 } from 'lucide-react';
 
 interface GameViewProps {
@@ -29,6 +33,8 @@ export const GameView: React.FC<GameViewProps> = ({
 }) => {
   // Active category filter
   const [selectedCategory, setSelectedCategory] = useState<GameCategoryId>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'all' | 'easy' | 'medium' | 'challenge'>('all');
 
   // Active game in player
   const [activeGame, setActiveGame] = useState<GameMetadata | null>(null);
@@ -42,6 +48,7 @@ export const GameView: React.FC<GameViewProps> = ({
   // Categories list
   const CATEGORIES: { id: GameCategoryId; label: string; icon: string }[] = [
     { id: 'all', label: 'SEMUA', icon: '🌟' },
+    { id: 'grade1', label: 'KELAS 1 SD CERIA', icon: '🎒' },
     { id: 'cambridge', label: 'CAMBRIDGE PACK', icon: '🇬🇧' },
     { id: 'quick_math', label: 'QUICK MATH', icon: '⚡' },
     { id: 'logic', label: 'LOGIC', icon: '🧩' },
@@ -54,11 +61,30 @@ export const GameView: React.FC<GameViewProps> = ({
     { id: 'brain_training', label: 'BRAIN TRAINING', icon: '🧠' },
   ];
 
-  // Filter games
-  const displayedGames =
-    selectedCategory === 'all'
-      ? GAME_CENTER_METADATA
-      : GAME_CENTER_METADATA.filter((g) => g.category === selectedCategory);
+  // Filtered games based on Category, Search query, and Difficulty
+  const displayedGames = useMemo(() => {
+    return GAME_CENTER_METADATA.filter((game) => {
+      // Category filter
+      if (selectedCategory !== 'all' && game.category !== selectedCategory) {
+        return false;
+      }
+      // Difficulty filter
+      if (selectedDifficulty !== 'all' && game.difficulty !== selectedDifficulty) {
+        return false;
+      }
+      // Search query
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        const matchesTitle = game.title.toLowerCase().includes(query);
+        const matchesSub = game.subtitle.toLowerCase().includes(query);
+        const matchesDesc = game.description.toLowerCase().includes(query);
+        const matchesCategory = game.category.toLowerCase().includes(query);
+        const matchesNum = String(game.gameNumber) === query;
+        return matchesTitle || matchesSub || matchesDesc || matchesCategory || matchesNum;
+      }
+      return true;
+    });
+  }, [selectedCategory, selectedDifficulty, searchQuery]);
 
   // Difficulty badge styling
   const difficultyMap = {
@@ -75,6 +101,14 @@ export const GameView: React.FC<GameViewProps> = ({
     } else {
       setActiveGame(game);
     }
+  };
+
+  // Lucky Random Game Launcher
+  const handleLuckyRandomGame = () => {
+    sound.playPowerUp();
+    const candidateList = displayedGames.length > 0 ? displayedGames : GAME_CENTER_METADATA;
+    const randomGame = candidateList[Math.floor(Math.random() * candidateList.length)];
+    handleSelectGame(randomGame);
   };
 
   // Play next game
@@ -127,7 +161,7 @@ export const GameView: React.FC<GameViewProps> = ({
                 KAFA MATH GAME CENTER
               </span>
               <span className="text-xs font-extrabold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 hidden sm:inline">
-                47 Mini-Games & Cambridge Pack
+                64 Game Matematika & Cambridge Pack
               </span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
@@ -147,10 +181,10 @@ export const GameView: React.FC<GameViewProps> = ({
               </div>
               <div>
                 <span className="text-[10px] font-bold text-purple-600 uppercase block leading-none">
-                  Koleksi Game
+                  Koleksi Lengkap
                 </span>
                 <span className="text-base sm:text-lg font-black text-slate-900">
-                  52+ Game
+                  64 Game
                 </span>
               </div>
             </div>
@@ -204,44 +238,86 @@ export const GameView: React.FC<GameViewProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. FEATURED GAME SPOTLIGHT (GAME PILIHAN HARI INI)                       */}
+      {/* 2. FEATURED SPOTLIGHT & SEARCH / QUICK FILTER CONTROLS                   */}
       {/* ========================================================================= */}
-      <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-3xl p-5 sm:p-6 text-white shadow-lg relative overflow-hidden">
-        {/* Background Sparkles Decor */}
-        <div className="absolute right-0 top-0 bottom-0 opacity-10 flex items-center pr-8 pointer-events-none text-9xl">
-          🎯
-        </div>
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="bg-emerald-500/40 text-emerald-100 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-emerald-400/30">
-                GAME PILIHAN EDUKATIF
-              </span>
-              <span className="text-xs text-emerald-200 font-bold">
-                Hari ini: Operasi KABATAKU, Balapan FPB/KPK & Pecahan
-              </span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-              🎯 Eksplorasi Permainan Matematika Favorit!
-            </h2>
-            <p className="text-xs sm:text-sm text-emerald-100 font-medium">
-              Bebas pilih permainan mana saja untuk mengasah logika, daya ingat, spasial, dan kecepatan berhitung tanpa batas!
-            </p>
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          {/* Search Bar */}
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari game (contoh: pizza, jam, uang, balapan, pecahan, robot, termometer)..."
+              className="w-full pl-10 pr-9 py-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-xs sm:text-sm text-slate-800 placeholder-slate-400 font-medium transition-all outline-none"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          {/* Difficulty Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+            {[
+              { id: 'all', label: 'Semua Level' },
+              { id: 'easy', label: '🟢 Mudah' },
+              { id: 'medium', label: '🟡 Sedang' },
+              { id: 'challenge', label: '🔴 Tantangan' },
+            ].map((diff) => (
+              <button
+                key={diff.id}
+                onClick={() => {
+                  sound.playClick();
+                  setSelectedDifficulty(diff.id as any);
+                }}
+                className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  selectedDifficulty === diff.id
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                }`}
+              >
+                {diff.label}
+              </button>
+            ))}
+
+            {/* Lucky Random Game Button */}
             <button
-              onClick={() => {
-                sound.playClick();
-                handleSelectGame(GAME_CENTER_METADATA[0]); // Quick math
-              }}
-              className="px-6 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-sm shadow-md transition-transform active:scale-95 cursor-pointer whitespace-nowrap flex items-center gap-2"
+              onClick={handleLuckyRandomGame}
+              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-900 font-black text-xs shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+              title="Pilih game secara acak!"
             >
-              <span>MAIN SEKARANG ▶</span>
+              <Dices className="w-4 h-4" />
+              <span>Acak Game 🎲</span>
             </button>
           </div>
         </div>
+
+        {/* Active search filter result tag */}
+        {(searchQuery || selectedDifficulty !== 'all' || selectedCategory !== 'all') && (
+          <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
+            <span className="text-slate-500 font-bold">
+              Menampilkan <strong className="text-slate-900">{displayedGames.length}</strong> dari 64 game
+              {searchQuery ? ` untuk pencarian "${searchQuery}"` : ''}
+            </span>
+            <button
+              onClick={() => {
+                sound.playClick();
+                setSearchQuery('');
+                setSelectedDifficulty('all');
+                setSelectedCategory('all');
+              }}
+              className="text-emerald-700 hover:text-emerald-800 font-bold hover:underline cursor-pointer"
+            >
+              Reset Semua Filter
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ========================================================================= */}
@@ -271,66 +347,87 @@ export const GameView: React.FC<GameViewProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* 4. GAME CARDS GRID (20 MINI-GAMES)                                        */}
+      {/* 4. GAME CARDS GRID (64 GAMES)                                            */}
       {/* ========================================================================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-        {displayedGames.map((game) => (
-          <div
-            key={game.id}
-            className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
+      {displayedGames.length === 0 ? (
+        <div className="bg-white rounded-3xl p-10 border border-slate-200 text-center space-y-3">
+          <div className="text-4xl">🔍</div>
+          <h3 className="text-base font-black text-slate-800">Tidak ada game yang cocok</h3>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            Coba gunakan kata kunci lain seperti "pecahan", "jam", "uang", "balapan", atau reset filter.
+          </p>
+          <button
+            onClick={() => {
+              sound.playClick();
+              setSearchQuery('');
+              setSelectedDifficulty('all');
+              setSelectedCategory('all');
+            }}
+            className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm cursor-pointer"
           >
-            <div>
-              {/* Header: Icon & Category & Difficulty */}
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="w-14 h-14 rounded-2xl bg-amber-50 border-2 border-amber-200 flex items-center justify-center text-3xl shadow-inner group-hover:scale-105 transition-transform">
-                  {game.icon}
+            Tampilkan Semua 64 Game
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          {displayedGames.map((game) => (
+            <div
+              key={game.id}
+              className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
+            >
+              <div>
+                {/* Header: Icon & Category & Difficulty */}
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-50 border-2 border-amber-200 flex items-center justify-center text-3xl shadow-inner group-hover:scale-105 transition-transform">
+                    {game.icon}
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span
+                      className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
+                        difficultyMap[game.difficulty].color
+                      }`}
+                    >
+                      {difficultyMap[game.difficulty].label}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400">
+                      GAME {game.gameNumber < 10 ? `0${game.gameNumber}` : game.gameNumber}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span
-                    className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
-                      difficultyMap[game.difficulty].color
-                    }`}
-                  >
-                    {difficultyMap[game.difficulty].label}
-                  </span>
-                  <span className="text-[10px] font-bold text-slate-400">
-                    GAME {game.gameNumber < 10 ? `0${game.gameNumber}` : game.gameNumber}
-                  </span>
-                </div>
+
+                {/* Title & Description */}
+                <h3 className="text-lg font-black text-slate-900 group-hover:text-emerald-700 transition-colors">
+                  {game.title}
+                </h3>
+                <p className="text-xs font-bold text-amber-700 mt-0.5">"{game.subtitle}"</p>
+                <p className="text-xs text-slate-500 font-medium mt-1.5 line-clamp-2 leading-relaxed">
+                  {game.description}
+                </p>
               </div>
 
-              {/* Title & Description */}
-              <h3 className="text-lg font-black text-slate-900 group-hover:text-emerald-700 transition-colors">
-                {game.title}
-              </h3>
-              <p className="text-xs font-bold text-amber-700 mt-0.5">"{game.subtitle}"</p>
-              <p className="text-xs text-slate-500 font-medium mt-1.5 line-clamp-2 leading-relaxed">
-                {game.description}
-              </p>
-            </div>
+              {/* Bottom Meta & Play Button */}
+              <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold text-slate-400 block">
+                    Best: <strong className="text-slate-800">{game.bestScore}</strong>
+                  </span>
+                  <span className="text-[11px] font-black text-emerald-600 block">
+                    +{game.xpReward} XP
+                  </span>
+                </div>
 
-            {/* Bottom Meta & Play Button */}
-            <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between gap-3">
-              <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-slate-400 block">
-                  Best: <strong className="text-slate-800">{game.bestScore}</strong>
-                </span>
-                <span className="text-[11px] font-black text-emerald-600 block">
-                  +{game.xpReward} XP
-                </span>
+                <button
+                  onClick={() => handleSelectGame(game)}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition-transform active:scale-95 cursor-pointer flex items-center gap-1.5"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>PLAY</span>
+                </button>
               </div>
-
-              <button
-                onClick={() => handleSelectGame(game)}
-                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition-transform active:scale-95 cursor-pointer flex items-center gap-1.5"
-              >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                <span>PLAY</span>
-              </button>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* 5. PARENT REPORT & LEARNING PROGRESS RECOMMENDATION                       */}
