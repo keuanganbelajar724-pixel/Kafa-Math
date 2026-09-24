@@ -431,10 +431,10 @@ export const App: React.FC = () => {
           onOpenParentDashboard={() => setShowParentDashboard(true)}
           onOpenShop={() => setShowShop(true)}
           onOpenAITutor={() => setShowAITutor(true)}
-          onOpenMathLab={() => setShowMathLab(true)}
+          onOpenMathLab={() => setMainTab('game')}
           onOpenExamSimulation={() => setShowExamMode(true)}
           onOpenMathDuel={() => setShowMathDuel(true)}
-          onOpenFormulaHandbook={() => setShowFormulaHandbook(true)}
+          onOpenFormulaHandbook={() => setMainTab('theory')}
           onOpenWorksheets={() => setShowWorksheetGenerator(true)}
           onToggleVoice={() =>
             setParentSettings((prev) => ({ ...prev, voiceOverEnabled: !prev.voiceOverEnabled }))
@@ -889,6 +889,7 @@ export const App: React.FC = () => {
                 gameId={activeMinigameId!}
                 onComplete={handleMinigameComplete}
                 onExit={() => setActiveMinigameId(null)}
+                onRewardXP={handleRewardXP}
               />
             )}
 

@@ -78,6 +78,24 @@ export const KnowledgeView: React.FC<KnowledgeViewProps> = ({
   // Interactive Celsius Thermometer Simulator
   const [labTemp, setLabTemp] = useState(25);
 
+  // Interactive Porogapit Division Lab
+  const [porogapitDividend, setPorogapitDividend] = useState(75);
+  const [porogapitDivisor, setPorogapitDivisor] = useState(3);
+
+  // Interactive Prime Factor Tree & KPK / FPB
+  const [kpkNumA, setKpkNumA] = useState(12);
+  const [kpkNumB, setKpkNumB] = useState(18);
+
+  // Interactive Metric Conversion Ladder
+  const [metricLadderType, setMetricLadderType] = useState<'panjang' | 'massa'>('panjang');
+  const [metricValue, setMetricValue] = useState(5);
+  const [metricFromUnit, setMetricFromUnit] = useState('m');
+  const [metricToUnit, setMetricToUnit] = useState('cm');
+
+  // Interactive Supermarket Discount Lab
+  const [discountPrice, setDiscountPrice] = useState(100000);
+  const [discountPercent, setDiscountPercent] = useState(20);
+
   const CATEGORIES: { id: KnowledgeCategory; label: string; icon: string }[] = [
     { id: 'all', label: 'Semua Materi', icon: '🌟' },
     { id: 'grade1', label: 'Kelas 1 SD Ceria', icon: '🎒' },
@@ -847,6 +865,82 @@ export const KnowledgeView: React.FC<KnowledgeViewProps> = ({
       sampleProblem: 'Jika 1 bintang melambangkan 10 siswa yang gemar matematika, maka 3 bintang melambangkan 3 × 10 = 30 siswa.',
       relatedGameId: 'carroll_diagram',
       relatedTopic: 'statistika',
+    },
+    {
+      id: 'porogapit_division_method',
+      category: 'mental_math' as KnowledgeCategory,
+      title: 'Teknik Pembagian Bersusun (Porogapit) 4 Langkah',
+      subtitle: 'Bagi ➔ Kali ➔ Kurang ➔ Turunkan (Rahasia Hitung Bebas Bingung)',
+      gradeBadge: 'SD Kelas 3 - 6',
+      icon: '➗',
+      keyConcept: 'Porogapit memecah angka besar menjadi langkah siklus berulang yang pasti: Bagi digit terdepan, kalikan dengan pembagi, kurangkan untuk sisa, dan turunkan digit berikutnya.',
+      steps: [
+        '1. BAGI (÷): Ambil digit depan yang cukup dibagi oleh angka pembagi.',
+        '2. KALI (×): Kalikan hasil bagi sementara dengan angka pembagi, tulis tepat di bawah angka tadi.',
+        '3. KURANG (-): Kurangkan untuk mencari sisa pembagian.',
+        '4. TURUNKAN (⬇️): Turunkan digit angka di belakangnya, lalu ulangi langkah 1 sampai sisa 0!',
+      ],
+      interactiveType: 'none',
+      sampleProblem: 'Contoh 75 ÷ 3: 7 ÷ 3 = 2 sisa 1. Tulis 2 di atas, 2 × 3 = 6 di bawah 7. 7 - 6 = 1. Turunkan 5 jadi 15. 15 ÷ 3 = 5. Tulis 5 di atas. Hasil akhir = 25 tepat!',
+      relatedGameId: 'quick_math',
+      relatedTopic: 'operasi_hitung',
+    },
+    {
+      id: 'kpk_fpb_prime_trees',
+      category: 'algebra' as KnowledgeCategory,
+      title: 'Pohon Faktor, FPB (Bagi Rata) & KPK (Jadwal Bersama)',
+      subtitle: 'Membedah Bilangan Prima & Penerapannya di Kehidupan Sehari-hari',
+      gradeBadge: 'SD Kelas 4 - 6',
+      icon: '🌳',
+      keyConcept: 'FPB adalah faktor persekutuan terbesar (mengalikan faktor prima yang sama dengan pangkat terkecil). KPK adalah kelipatan persekutuan terkecil (mengalikan semua faktor prima dengan pangkat terbesar).',
+      steps: [
+        '1. Pohon Faktor: Bagi bilangan dengan bilangan prima terkecil (2, 3, 5, 7, 11...) hingga ujungnya semua bilangan prima.',
+        '2. Faktorisasi Prima: Tulis dalam bentuk perkalian berpangkat (contoh: 12 = 2² × 3, 18 = 2 × 3²).',
+        '3. Trik Menentukan FPB: Pilih faktor prima yang SAMA di kedua angka, ambil PANGKAT TERKECIL (FPB = 2 × 3 = 6).',
+        '4. Trik Menentukan KPK: Ambil SEMUA faktor prima yang ada, pilih PANGKAT TERBESAR (KPK = 2² × 3² = 36).',
+      ],
+      interactiveType: 'none',
+      sampleProblem: 'FPB: Ibu punya 12 kue dan 18 permen, ingin dibagikan ke piring sama rata. Jumlah piring terbanyak = FPB(12, 18) = 6 piring! KPK: Lampu A menyala tiap 12 detik, B tiap 18 detik, mereka menyala bersama lagi tiap 36 detik.',
+      relatedGameId: 'factor_tree_lab',
+      relatedTopic: 'fpb_kpk',
+    },
+    {
+      id: 'tangga_satuan_metrik_ladder',
+      category: 'measurement' as KnowledgeCategory,
+      title: 'Tangga Konversi Satuan Metrik (Panjang & Massa)',
+      subtitle: 'Aturan 7 Tingkat: Turun Dikali 10, Naik Dibagi 10',
+      gradeBadge: 'SD Kelas 2 - 5',
+      icon: '🪜',
+      keyConcept: 'Satuan internasional menggunakan sistem desimal berbasis 10. Jembatan keledai panjang: "Kucing Hitam Dalam Mobil Didesi Cantik Mondar-mandir" (km, hm, dam, m, dm, cm, mm).',
+      steps: [
+        '1. Urutan 7 Tangga: km (kilometer) ➔ hm ➔ dam ➔ m (meter) ➔ dm ➔ cm ➔ mm (milimeter).',
+        '2. Aturan TURUN Tangga: Tiap turun 1 anak tangga, kalikan dengan 10 (tambahkan satu angka nol). Turun 2 tangga = × 100.',
+        '3. Aturan NAIK Tangga: Tiap naik 1 anak tangga, bagi dengan 10 (geser koma desimal ke kiri 1 angka).',
+        '4. Satuan Massa (Berat): Mengikuti aturan yang persis sama: kg (kilogram) ➔ hg (ons) ➔ dag ➔ g (gram) ➔ dg ➔ cg ➔ mg.',
+      ],
+      interactiveType: 'none',
+      sampleProblem: '5 meter ke centimeter: Dari m turun 2 tangga (dm ➔ cm). Maka 5 × 100 = 500 cm. 2.000 gram ke kilogram: Dari g naik 3 tangga (dag ➔ hg ➔ kg). Maka 2.000 ÷ 1.000 = 2 kg!',
+      relatedGameId: 'jengkal_magic_ruler',
+      relatedTopic: 'pengukuran',
+    },
+    {
+      id: 'supermarket_discount_percent',
+      category: 'fractions' as KnowledgeCategory,
+      title: 'Menghitung Diskon Persentase di Supermarket',
+      subtitle: 'Trik Kilat Mental Math Potongan Harga & Pecahan Senilai',
+      gradeBadge: 'SD Kelas 4 - 6',
+      icon: '🏷️',
+      keyConcept: 'Persen (%) artinya per seratus (1/100). Potongan diskon = (persentase / 100) × harga awal. Harga akhir yang dibayar di kasir = harga awal dikurang potongan diskon.',
+      steps: [
+        '1. Trik Diskon 50%: Langsung bagi 2 harganya! (Pecahan 1/2).',
+        '2. Trik Diskon 25%: Langsung bagi 4 harganya! (Pecahan 1/4).',
+        '3. Trik Diskon 10%: Cukup buang satu angka 0 dari harga barang! (Pecahan 1/10).',
+        '4. Trik Diskon 20%: Hitung 10% dulu (buang satu angka 0), lalu kalikan 2! Sangat cepat dihitung di kepala!',
+      ],
+      interactiveType: 'none',
+      sampleProblem: 'Baju harga Rp 150.000 diskon 20%: 10% dari 150.000 = 15.000. Maka 20% = 15.000 × 2 = 30.000. Harga bayar di kasir = 150.000 - 30.000 = Rp 120.000.',
+      relatedGameId: 'fraction_decimal_percent',
+      relatedTopic: 'pecahan',
     },
   ];
 
@@ -1849,6 +1943,445 @@ export const KnowledgeView: React.FC<KnowledgeViewProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* PLAYGROUND 9: POROGAPIT (PEMBAGIAN BERSUSUN) */}
+          <div className="bg-white rounded-3xl p-5 border-2 border-emerald-200 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-2xl bg-emerald-100 text-emerald-800 font-black text-xs">
+                  ➗ Lab 09
+                </span>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">
+                    Laboratorium Porogapit (Pembagian Bersusun)
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-bold">
+                    Metode 4 Siklus: Bagi ➔ Kali ➔ Kurang ➔ Turunkan
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleSpeak(`Pembagian bersusun porogapit. Untuk menghitung ${porogapitDividend} dibagi ${porogapitDivisor}, bagi digit depan terlebih dahulu, kalikan dengan pembagi, kurangkan untuk mencari sisa, lalu turunkan digit berikutnya hingga sisa 0.`)}
+                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-emerald-600 transition-colors cursor-pointer"
+                title="Dengarkan Penjelasan"
+              >
+                <Volume2 className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Controls */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                <span>Pilih Soal Pembagian:</span>
+                <span className="font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 font-black">
+                  {porogapitDividend} ÷ {porogapitDivisor} = {Math.floor(porogapitDividend / porogapitDivisor)}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                {[
+                  { d: 75, s: 3 },
+                  { d: 96, s: 4 },
+                  { d: 84, s: 3 },
+                  { d: 92, s: 4 },
+                  { d: 125, s: 5 },
+                  { d: 144, s: 6 },
+                ].map((item, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setPorogapitDividend(item.d);
+                      setPorogapitDivisor(item.s);
+                      sound.playClick();
+                    }}
+                    className={`py-1.5 px-2 rounded-xl text-xs font-bold border cursor-pointer transition-all ${
+                      porogapitDividend === item.d && porogapitDivisor === item.s
+                        ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    {item.d} ÷ {item.s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Visual Porogapit Card */}
+            <div className="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200 text-slate-800 space-y-3 font-mono text-xs">
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-xs font-black text-slate-600 font-sans">Hasil Bagi di Atas:</span>
+                <span className="text-xl font-black text-emerald-700 bg-white px-4 py-1 rounded-xl border border-emerald-300 shadow-2xs">
+                  {Math.floor(porogapitDividend / porogapitDivisor)}
+                </span>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-xl border border-emerald-100 font-sans space-y-2 text-xs">
+                <div className="flex items-start gap-2">
+                  <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-[10px] shrink-0 mt-0.5">1</span>
+                  <div>
+                    <span className="font-bold text-slate-900">BAGI (÷): </span>
+                    <span className="text-slate-600">
+                      Ambil digit awal ({String(porogapitDividend)[0]}). {String(porogapitDividend)[0]} ÷ {porogapitDivisor} = {Math.floor(Number(String(porogapitDividend)[0]) / porogapitDivisor)}. Tulis di atas.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-[10px] shrink-0 mt-0.5">2</span>
+                  <div>
+                    <span className="font-bold text-slate-900">KALI & KURANG (× & -): </span>
+                    <span className="text-slate-600">
+                      Kalikan {Math.floor(Number(String(porogapitDividend)[0]) / porogapitDivisor)} × {porogapitDivisor} = {Math.floor(Number(String(porogapitDividend)[0]) / porogapitDivisor) * porogapitDivisor}. Sisa = {Number(String(porogapitDividend)[0]) - Math.floor(Number(String(porogapitDividend)[0]) / porogapitDivisor) * porogapitDivisor}.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-[10px] shrink-0 mt-0.5">3</span>
+                  <div>
+                    <span className="font-bold text-slate-900">TURUNKAN (⬇️): </span>
+                    <span className="text-slate-600">
+                      Turunkan digit berikutnya ({String(porogapitDividend).slice(1)}). Bagi lagi sampai sisa 0! Tuntas tanpa sisa!
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* PLAYGROUND 10: POHON FAKTOR & FPB / KPK */}
+          <div className="bg-white rounded-3xl p-5 border-2 border-purple-200 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-2xl bg-purple-100 text-purple-800 font-black text-xs">
+                  🌳 Lab 10
+                </span>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">
+                    Laboratorium Pohon Faktor, FPB & KPK
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-bold">
+                    Bagi Rata (FPB) vs Jadwal Bersama (KPK)
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleSpeak(`Laboratorium pohon faktor prima. FPB didapat dengan mengalikan faktor prima yang sama dengan pangkat terkecil. KPK didapat dengan mengalikan semua faktor prima dengan pangkat terbesar.`)}
+                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-purple-600 transition-colors cursor-pointer"
+                title="Dengarkan Penjelasan"
+              >
+                <Volume2 className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Presets */}
+            <div className="space-y-2">
+              <span className="text-xs font-bold text-slate-700 block">Pilih Pasangan Bilangan:</span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { a: 12, b: 18, fpb: 6, kpk: 36, fa: '2² × 3', fb: '2 × 3²' },
+                  { a: 24, b: 36, fpb: 12, kpk: 72, fa: '2³ × 3', fb: '2² × 3²' },
+                  { a: 15, b: 20, fpb: 5, kpk: 60, fa: '3 × 5', fb: '2² × 5' },
+                  { a: 8, b: 12, fpb: 4, kpk: 24, fa: '2³', fb: '2² × 3' },
+                ].map((item, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setKpkNumA(item.a);
+                      setKpkNumB(item.b);
+                      sound.playClick();
+                    }}
+                    className={`p-2 rounded-xl text-xs font-bold border cursor-pointer transition-all ${
+                      kpkNumA === item.a && kpkNumB === item.b
+                        ? 'bg-purple-600 text-white border-purple-700 shadow-2xs'
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    Bilangan {item.a} & {item.b}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Visual Factoring Display */}
+            <div className="bg-purple-50/70 p-4 rounded-2xl border border-purple-200 space-y-3">
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="bg-white p-3 rounded-xl border border-purple-100 text-center space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 block">Faktorisasi Bilangan {kpkNumA}:</span>
+                  <span className="font-mono font-black text-purple-700 text-sm">
+                    {kpkNumA === 12 ? '2² × 3' : kpkNumA === 24 ? '2³ × 3' : kpkNumA === 15 ? '3 × 5' : '2³'}
+                  </span>
+                </div>
+                <div className="bg-white p-3 rounded-xl border border-purple-100 text-center space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 block">Faktorisasi Bilangan {kpkNumB}:</span>
+                  <span className="font-mono font-black text-purple-700 text-sm">
+                    {kpkNumB === 18 ? '2 × 3²' : kpkNumB === 36 ? '2² × 3²' : kpkNumB === 20 ? '2² × 5' : '2² × 3'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Results Box */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-center">
+                  <span className="text-[10px] font-black text-emerald-800 uppercase block">FPB (Bagi Rata)</span>
+                  <span className="text-xl font-black text-emerald-700">
+                    {kpkNumA === 12 && kpkNumB === 18 ? 6 : kpkNumA === 24 && kpkNumB === 36 ? 12 : kpkNumA === 15 && kpkNumB === 20 ? 5 : 4}
+                  </span>
+                  <span className="text-[10px] text-emerald-900 block mt-0.5">Faktor prima sama, pangkat terkecil</span>
+                </div>
+                <div className="bg-indigo-50 border border-indigo-200 p-3 rounded-xl text-center">
+                  <span className="text-[10px] font-black text-indigo-800 uppercase block">KPK (Kelipatan)</span>
+                  <span className="text-xl font-black text-indigo-700">
+                    {kpkNumA === 12 && kpkNumB === 18 ? 36 : kpkNumA === 24 && kpkNumB === 36 ? 72 : kpkNumA === 15 && kpkNumB === 20 ? 60 : 24}
+                  </span>
+                  <span className="text-[10px] text-indigo-900 block mt-0.5">Semua faktor, pangkat terbesar</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* PLAYGROUND 11: TANGGA SATUAN METRIK */}
+          <div className="bg-white rounded-3xl p-5 border-2 border-sky-200 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-2xl bg-sky-100 text-sky-800 font-black text-xs">
+                  🪜 Lab 11
+                </span>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">
+                    Laboratorium Tangga Satuan Metrik
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-bold">
+                    Turun Dikali 10, Naik Dibagi 10 (Sistem Desimal)
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleSpeak(`Tangga satuan metrik. Tiap turun satu anak tangga kalikan dengan sepuluh. Tiap naik satu anak tangga bagikan dengan sepuluh.`)}
+                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-sky-600 transition-colors cursor-pointer"
+                title="Dengarkan Penjelasan"
+              >
+                <Volume2 className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Type selector & Value input */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setMetricLadderType('panjang');
+                    setMetricFromUnit('m');
+                    setMetricToUnit('cm');
+                  }}
+                  className={`flex-1 py-1.5 rounded-xl text-xs font-black border transition-all cursor-pointer ${
+                    metricLadderType === 'panjang'
+                      ? 'bg-sky-600 text-white border-sky-700 shadow-2xs'
+                      : 'bg-slate-50 text-slate-600 border-slate-200'
+                  }`}
+                >
+                  📏 Satuan Panjang (km s/d mm)
+                </button>
+                <button
+                  onClick={() => {
+                    setMetricLadderType('massa');
+                    setMetricFromUnit('kg');
+                    setMetricToUnit('g');
+                  }}
+                  className={`flex-1 py-1.5 rounded-xl text-xs font-black border transition-all cursor-pointer ${
+                    metricLadderType === 'massa'
+                      ? 'bg-sky-600 text-white border-sky-700 shadow-2xs'
+                      : 'bg-slate-50 text-slate-600 border-slate-200'
+                  }`}
+                >
+                  ⚖️ Satuan Berat (kg s/d mg)
+                </button>
+              </div>
+
+              {/* Conversion selector */}
+              <div className="grid grid-cols-3 gap-2 items-center text-xs">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 block mb-1">Nilai:</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={500}
+                    value={metricValue}
+                    onChange={(e) => setMetricValue(Math.max(1, Number(e.target.value) || 1))}
+                    className="w-full py-1.5 px-3 rounded-xl bg-slate-50 border border-slate-200 font-black text-slate-800 text-center"
+                  />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 block mb-1">Dari Satuan:</span>
+                  <select
+                    value={metricFromUnit}
+                    onChange={(e) => setMetricFromUnit(e.target.value)}
+                    className="w-full py-1.5 px-2 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-800 text-xs"
+                  >
+                    {(metricLadderType === 'panjang'
+                      ? ['km', 'hm', 'dam', 'm', 'dm', 'cm', 'mm']
+                      : ['kg', 'hg', 'dag', 'g', 'dg', 'cg', 'mg']
+                    ).map((u) => (
+                      <option key={u} value={u}>{u}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 block mb-1">Ke Satuan:</span>
+                  <select
+                    value={metricToUnit}
+                    onChange={(e) => setMetricToUnit(e.target.value)}
+                    className="w-full py-1.5 px-2 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-800 text-xs"
+                  >
+                    {(metricLadderType === 'panjang'
+                      ? ['km', 'hm', 'dam', 'm', 'dm', 'cm', 'mm']
+                      : ['kg', 'hg', 'dag', 'g', 'dg', 'cg', 'mg']
+                    ).map((u) => (
+                      <option key={u} value={u}>{u}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Calculated Result Card */}
+            {(() => {
+              const ladder = metricLadderType === 'panjang'
+                ? ['km', 'hm', 'dam', 'm', 'dm', 'cm', 'mm']
+                : ['kg', 'hg', 'dag', 'g', 'dg', 'cg', 'mg'];
+              const idxFrom = ladder.indexOf(metricFromUnit);
+              const idxTo = ladder.indexOf(metricToUnit);
+              const diff = idxTo - idxFrom;
+              const multiplier = Math.pow(10, Math.abs(diff));
+              const result = diff >= 0 ? metricValue * multiplier : metricValue / multiplier;
+
+              return (
+                <div className="bg-sky-50/80 p-4 rounded-2xl border border-sky-200 space-y-2 text-xs">
+                  <div className="flex items-center justify-between font-black">
+                    <span className="text-slate-600">Hasil Konversi:</span>
+                    <span className="text-base text-sky-800 bg-white px-3 py-1 rounded-xl border border-sky-300">
+                      {metricValue} {metricFromUnit} = {result.toLocaleString('id-ID')} {metricToUnit}
+                    </span>
+                  </div>
+                  <div className="text-[11px] font-semibold text-slate-600 bg-white/80 p-2.5 rounded-xl border border-sky-100">
+                    {diff > 0 ? (
+                      <span>⬇️ <strong>Turun {diff} anak tangga:</strong> Kalikan dengan {multiplier.toLocaleString('id-ID')} (tambahkan {diff} angka nol)!</span>
+                    ) : diff < 0 ? (
+                      <span>⬆️ <strong>Naik {Math.abs(diff)} anak tangga:</strong> Bagikan dengan {multiplier.toLocaleString('id-ID')} (geser koma ke kiri)!</span>
+                    ) : (
+                      <span>Sama tingkat tangga (nilai tetap sama).</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* PLAYGROUND 12: DISKON SUPERMARKET & PERSENTASE */}
+          <div className="bg-white rounded-3xl p-5 border-2 border-amber-200 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-2xl bg-amber-100 text-amber-800 font-black text-xs">
+                  🏷️ Lab 12
+                </span>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">
+                    Laboratorium Diskon Persentase Kasir
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-bold">
+                    Trik Mental Math Kasir Supermarket
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleSpeak(`Diskon persentase. Barang seharga Rp ${discountPrice.toLocaleString('id-ID')} dengan diskon ${discountPercent} persen mendapat potongan Rp ${(discountPrice * discountPercent / 100).toLocaleString('id-ID')}. Total yang dibayar di kasir adalah Rp ${(discountPrice * (100 - discountPercent) / 100).toLocaleString('id-ID')}.`)}
+                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-amber-600 transition-colors cursor-pointer"
+                title="Dengarkan Penjelasan"
+              >
+                <Volume2 className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Price & Discount Selectors */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                <span>Harga Barang:</span>
+                <span className="font-mono text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200 font-black">
+                  Rp {discountPrice.toLocaleString('id-ID')}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                {[50000, 80000, 100000, 150000, 200000].map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => {
+                      setDiscountPrice(p);
+                      sound.playClick();
+                    }}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-bold border whitespace-nowrap cursor-pointer transition-all ${
+                      discountPrice === p
+                        ? 'bg-amber-600 text-white border-amber-700 shadow-2xs'
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    Rp {(p / 1000)}rb
+                  </button>
+                ))}
+              </div>
+
+              {/* Percent options */}
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                <span>Pilih Diskon:</span>
+                <span className="font-black text-rose-600">{discountPercent}% OFF</span>
+              </div>
+              <div className="grid grid-cols-5 gap-1.5">
+                {[10, 20, 25, 50, 70].map((pct) => (
+                  <button
+                    key={pct}
+                    onClick={() => {
+                      setDiscountPercent(pct);
+                      sound.playClick();
+                    }}
+                    className={`py-1.5 rounded-xl text-xs font-black border cursor-pointer transition-all ${
+                      discountPercent === pct
+                        ? 'bg-rose-600 text-white border-rose-700 shadow-2xs'
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    {pct}%
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Receipt Summary Card */}
+            {(() => {
+              const discountAmount = (discountPrice * discountPercent) / 100;
+              const finalPrice = discountPrice - discountAmount;
+              return (
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-4 rounded-2xl border border-amber-200 space-y-2 text-xs font-mono">
+                  <div className="border-b border-dashed border-amber-300 pb-2 space-y-1">
+                    <div className="flex justify-between text-slate-600">
+                      <span>Harga Awal:</span>
+                      <span>Rp {discountPrice.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div className="flex justify-between text-rose-600 font-bold">
+                      <span>Hemat ({discountPercent}%):</span>
+                      <span>- Rp {discountAmount.toLocaleString('id-ID')}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center pt-1 text-slate-900 font-black text-sm font-sans">
+                    <span>Bayar di Kasir:</span>
+                    <span className="text-base text-emerald-700 bg-white px-3 py-0.5 rounded-xl border border-emerald-300 shadow-2xs font-mono">
+                      Rp {finalPrice.toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                  <div className="text-[11px] font-sans text-amber-900 font-semibold pt-1">
+                    💡 <strong>Trik Mental Math:</strong> {discountPercent === 50 ? 'Diskon 50% = langsung bagi 2 harganya!' : discountPercent === 25 ? 'Diskon 25% = langsung bagi 4 harganya!' : `10% dari Rp ${discountPrice.toLocaleString('id-ID')} adalah Rp ${(discountPrice * 0.1).toLocaleString('id-ID')}. Kalikan sesuai persen!`}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>

@@ -161,7 +161,7 @@ export const GameView: React.FC<GameViewProps> = ({
                 KAFA MATH GAME CENTER
               </span>
               <span className="text-xs font-extrabold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 hidden sm:inline">
-                64 Game Matematika & Cambridge Pack
+                {GAME_CENTER_METADATA.length} Game Matematika & Cambridge Pack
               </span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
@@ -184,7 +184,7 @@ export const GameView: React.FC<GameViewProps> = ({
                   Koleksi Lengkap
                 </span>
                 <span className="text-base sm:text-lg font-black text-slate-900">
-                  64 Game
+                  {GAME_CENTER_METADATA.length} Game
                 </span>
               </div>
             </div>

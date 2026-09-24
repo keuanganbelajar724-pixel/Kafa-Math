@@ -191,9 +191,9 @@ export const TwentyNewGamesRouter: React.FC<TwentyNewGamesRouterProps> = ({
     case 'thermometer_weather_lab':
       return <ThermometerWeatherLabGame gameId={gameId} onComplete={onComplete} onExit={onExit} />;
     case 'algebra_balance_scale':
-      return <AlgebraBalanceScaleGame onExit={onExit} onRewardXP={onRewardXP} />;
+      return <AlgebraBalanceScaleGame onExit={onExit} onRewardXP={onRewardXP} onComplete={onComplete} />;
     case 'coordinate_treasure_island':
-      return <CoordinateTreasureIslandGame onExit={onExit} onRewardXP={onRewardXP} />;
+      return <CoordinateTreasureIslandGame onExit={onExit} onRewardXP={onRewardXP} onComplete={onComplete} />;
 
     default:
       return null;

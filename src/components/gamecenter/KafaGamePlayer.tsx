@@ -28,8 +28,65 @@ import {
   BookOpen,
   ChevronDown,
   ChevronUp,
+  Compass,
+  Coffee,
+  HelpCircle,
+  Pause,
+  X,
+  Info,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+
+export const getGameActionGuidance = (gameId: string): string => {
+  switch (gameId) {
+    case 'quick_math':
+      return '👆 Hitung di kepala, lalu ketuk salah satu angka pilihan jawaban!';
+    case 'number_catch':
+      return '🎈 Amati instruksi di atas, lalu ketuk gelembung angka yang memenuhi kriteria!';
+    case 'number_bond':
+      return '🔗 Cari angka yang melengkapi ikatan agar total lingkaran di atas pas!';
+    case 'math_match':
+      return '🃏 Ketuk 1 kotak operasi di kiri, lalu ketuk kotak hasil yang sama di kanan!';
+    case 'math_memory':
+      return '🧠 Buka 2 kartu memori secara berurutan untuk mencocokkan nilainya!';
+    case 'fraction_pizza':
+      return '🍕 Sentuh irisan pizza sesuai angka pembilang, lalu tekan tombol Periksa!';
+    case 'clock_master':
+    case 'interactive_clock':
+      return '⏰ Amati jarum pendek & panjang, lalu pilih jam digital yang tepat!';
+    case 'coin_cashier':
+      return '💰 Kumpulkan koin rupiah hingga tepat sama dengan nominal target belanja!';
+    case 'pattern_quest':
+    case 'pattern_master':
+      return '🔍 Amati urutan pola bilangan, lalu tentukan angka pengisi tanda tanya!';
+    case 'shape_sorter':
+    case 'shape_builder':
+      return '📐 Pilih bangun datar yang cocok dengan ciri dan sifat yang disebutkan!';
+    case 'area_builder':
+      return '🧱 Ketuk petak-petak kisi kotak hingga total luas perseginya pas!';
+    case 'math_sort':
+    case 'odd_even_runner':
+      return '⚡ Tentukan dengan cepat apakah bilangan ini GANJIL atau GENAP!';
+    case 'greater_or_less':
+      return '⚖️ Bandingkan kedua sisi, lalu pilih simbol <, =, atau >!';
+    case 'math_race':
+      return '🏎️ Pacu larimu mendahului lawan dengan menjawab cepat dan benar!';
+    case 'target_number':
+      return '🎯 Pilih operasi matematika yang tepat menghasilkan angka target!';
+    case 'math_detective':
+      return '🕵️ Baca petunjuk detektif dan ketuk kotak brankas rahasia!';
+    case 'balance_math':
+      return '⚖️ Amati timbangan yang seimbang, hitung berat 1 buah benda misteri!';
+    case 'quick_tap':
+      return '⚡ Refleks kilat! Segera ketuk tombol angka target yang diminta!';
+    case 'true_or_false':
+      return '✅ Tentukan apakah rumus atau pernyataan ini BENAR atau SALAH!';
+    case 'word_problem_adventure':
+      return '📖 Baca cerita petualangan, kamu bisa sentuh apel untuk coret/hitung!';
+    default:
+      return '💡 Pahami pertanyaan dengan teliti, lalu tentukan jawaban yang paling tepat!';
+  }
+};
 
 interface KafaGamePlayerProps {
   game: GameMetadata;
@@ -47,8 +104,8 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
   // Game states: 'intro' | 'playing' | 'gameover' | 'completed'
   const [gameState, setGameState] = useState<'intro' | 'playing' | 'gameover' | 'completed'>('intro');
 
-  // Game Mode: 'adventure' | 'time_attack' | 'boss_battle'
-  const [gameMode, setGameMode] = useState<'adventure' | 'time_attack' | 'boss_battle'>('adventure');
+  // Game Mode: 'adventure' | 'time_attack' | 'boss_battle' | 'relaxed'
+  const [gameMode, setGameMode] = useState<'adventure' | 'time_attack' | 'boss_battle' | 'relaxed'>('adventure');
   const [bossHp, setBossHp] = useState<number>(500);
   const bossMaxHp = 500;
 
@@ -63,6 +120,8 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
   // Background Music & Interactive Review
   const [isBgmOn, setIsBgmOn] = useState<boolean>(false);
   const [showReview, setShowReview] = useState<boolean>(false);
+  const [showTutorialModal, setShowTutorialModal] = useState<boolean>(false);
+  const [isFeedbackPaused, setIsFeedbackPaused] = useState<boolean>(false);
   const [roundHistory, setRoundHistory] = useState<
     Array<{ round: number; question: string; isCorrect: boolean; explanation?: string }>
   >([]);
@@ -84,6 +143,7 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
   // Feedback & Hint
   const [showHint, setShowHint] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string; explanation?: string } | null>(null);
+  const feedbackAdvanceTimerRef = useRef<any>(null);
 
   // Specific Game Interactivities
   // Game 04: Math Match state
@@ -114,6 +174,8 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
   // Start the game
   const handleStartGame = () => {
     sound.playClick();
+    if (feedbackAdvanceTimerRef.current) clearTimeout(feedbackAdvanceTimerRef.current);
+    setIsFeedbackPaused(false);
     setGameState('playing');
     setScore(0);
     setHearts(3);
@@ -122,10 +184,55 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
     setRound(1);
     setFeedback(null);
     setShowHint(false);
+    setRoundHistory([]);
+    setBossHp(500);
+
+    // Reset power-ups for the new game run
+    setFreezeAvailable(true);
+    setFreezeActive(false);
+    setEliminateAvailable(true);
+    setEliminatedOptions([]);
+    setShieldAvailable(true);
+    setShieldActive(false);
+
     resetRoundStates(1);
-    if (game.hasTimer) {
-      resetTimer(10);
+    const hasActiveTimer = (game.hasTimer || gameMode === 'time_attack') && gameMode !== 'relaxed';
+    if (hasActiveTimer) {
+      const roundDuration = gameMode === 'time_attack' ? 7 : 10;
+      resetTimer(roundDuration);
     }
+  };
+
+  // Power-up activation handlers
+  const handleUseFreeze = () => {
+    if (!freezeAvailable || freezeActive) return;
+    sound.playFreeze();
+    setFreezeAvailable(false);
+    setFreezeActive(true);
+    if (timerRef.current) clearInterval(timerRef.current);
+    setTimeout(() => {
+      setFreezeActive(false);
+      if (gameState === 'playing' && (game.hasTimer || gameMode === 'time_attack')) {
+        resetTimer(timeLeft > 0 ? timeLeft : 6);
+      }
+    }, 5000);
+  };
+
+  const handleUseShield = () => {
+    if (!shieldAvailable || shieldActive) return;
+    sound.playShield();
+    setShieldAvailable(false);
+    setShieldActive(true);
+  };
+
+  const handleUseEliminate = (options?: string[], correctAns?: string) => {
+    if (!eliminateAvailable || !options || !correctAns) return;
+    sound.playEliminate();
+    setEliminateAvailable(false);
+    const wrong = options.filter((o) => o !== correctAns);
+    // Pick up to 2 wrong options to eliminate
+    const shuffled = [...wrong].sort(() => 0.5 - Math.random());
+    setEliminatedOptions(shuffled.slice(0, 2));
   };
 
   // Reset round-specific interactive state
@@ -138,6 +245,7 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
     setMemoryFlipped([]);
     setMemoryMatched([]);
     setApplesCrossed([]);
+    setEliminatedOptions([]);
   };
 
   // Timer loop
@@ -168,6 +276,21 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
     setTimeout(() => setIsShaking(false), 450);
     setCombo(0);
 
+    // Check if shield was active
+    if (shieldActive) {
+      sound.playShield();
+      setShieldActive(false);
+      setFeedback({
+        isCorrect: false,
+        message: '🛡️ Perisai Melindungi!',
+        explanation: 'Waktu habis tetapi Perisai Suci melindungimu dari kehilangan nyawa!',
+      });
+      setTimeout(() => {
+        handleNextRound();
+      }, 1500);
+      return;
+    }
+
     if (game.hasHearts) {
       setHearts((h) => {
         const next = h - 1;
@@ -189,18 +312,30 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
     }, 1500);
   };
 
-  // Clear timer on unmount
+  // Clear timer and bgm on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      sound.stopBgm();
     };
   }, []);
 
   // Handle Answer Evaluation
-  const handleAnswer = (isCorrect: boolean, explanationText?: string) => {
+  const handleAnswer = (isCorrect: boolean, explanationText?: string, questionTitle?: string) => {
     if (feedback) return; // Prevent double taps during animation
 
     if (timerRef.current) clearInterval(timerRef.current);
+
+    // Save history for interactive review
+    setRoundHistory((prev) => [
+      ...prev,
+      {
+        round,
+        question: questionTitle || `Tantangan Babak ${round}`,
+        isCorrect,
+        explanation: explanationText,
+      },
+    ]);
 
     if (isCorrect) {
       const newCombo = combo + 1;
@@ -210,8 +345,15 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
       // World-class combo audio synthesis
       sound.playCombo(newCombo);
 
+      // Boss Battle Damage
+      if (gameMode === 'boss_battle') {
+        sound.playBossHit();
+        const damage = 100 + newCombo * 20;
+        setBossHp((hp) => Math.max(0, hp - damage));
+      }
+
       // Speed bonus
-      const speedBonus = game.hasTimer ? timeLeft * 5 : 20;
+      const speedBonus = game.hasTimer || gameMode === 'time_attack' ? timeLeft * 6 : 20;
       const comboMultiplier = Math.min(newCombo, 4);
       const pointsEarned = 100 * comboMultiplier + speedBonus;
       setScore((prev) => prev + pointsEarned);
@@ -235,15 +377,36 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
         explanation: explanationText,
       });
 
-      setTimeout(() => {
+      if (feedbackAdvanceTimerRef.current) clearTimeout(feedbackAdvanceTimerRef.current);
+      feedbackAdvanceTimerRef.current = setTimeout(() => {
         handleNextRound();
-      }, 1400);
+      }, 3200);
     } else {
+      // If shield is active, protect player!
+      if (shieldActive) {
+        sound.playShield();
+        setShieldActive(false);
+        setFeedback({
+          isCorrect: false,
+          message: '🛡️ Perisai Melindungi!',
+          explanation: 'Jawaban kurang tepat tetapi Perisai Suci melindungimu dari kehilangan hati!',
+        });
+        if (feedbackAdvanceTimerRef.current) clearTimeout(feedbackAdvanceTimerRef.current);
+        feedbackAdvanceTimerRef.current = setTimeout(() => {
+          handleNextRound();
+        }, 3200);
+        return;
+      }
+
       sound.playIncorrect();
       sound.playHaptic('warning');
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 450);
       setCombo(0);
+
+      if (gameMode === 'boss_battle') {
+        sound.playBossAttack();
+      }
 
       let nextHearts = hearts;
       if (game.hasHearts) {
@@ -257,17 +420,23 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
         explanation: explanationText || 'Perhatikan lagi konsep perhitungannya.',
       });
 
-      setTimeout(() => {
+      if (feedbackAdvanceTimerRef.current) clearTimeout(feedbackAdvanceTimerRef.current);
+      feedbackAdvanceTimerRef.current = setTimeout(() => {
         if (nextHearts <= 0 && game.hasHearts) {
           setGameState('gameover');
         } else {
           handleNextRound();
         }
-      }, 1800);
+      }, 4500);
     }
   };
 
   const handleNextRound = () => {
+    if (feedbackAdvanceTimerRef.current) {
+      clearTimeout(feedbackAdvanceTimerRef.current);
+      feedbackAdvanceTimerRef.current = null;
+    }
+    setIsFeedbackPaused(false);
     setFeedback(null);
     setShowHint(false);
 
@@ -275,8 +444,10 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
       const nextR = round + 1;
       setRound(nextR);
       resetRoundStates(nextR);
-      if (game.hasTimer) {
-        resetTimer(10);
+      const hasActiveTimer = (game.hasTimer || gameMode === 'time_attack') && gameMode !== 'relaxed';
+      if (hasActiveTimer) {
+        const roundDuration = gameMode === 'time_attack' ? 7 : 10;
+        resetTimer(roundDuration);
       }
     } else {
       // Completed all rounds!
@@ -631,6 +802,98 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
             </div>
           </div>
 
+          {/* Mode Selection */}
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 text-left">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-slate-700 uppercase tracking-wider block">
+                PILIH MODE PERMAINAN:
+              </span>
+              <span className="text-[10px] font-bold text-slate-500">
+                Pilih sesuai gaya belajarmu
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button
+                type="button"
+                onClick={() => setGameMode('relaxed')}
+                className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1 ${
+                  gameMode === 'relaxed'
+                    ? 'bg-teal-600 text-white border-teal-700 shadow-sm'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                }`}
+              >
+                <Coffee className="w-4 h-4" />
+                <span className="text-[11px] font-black">Mode Santai</span>
+                <span className="text-[9px] opacity-80">Tanpa Batas Waktu</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setGameMode('adventure')}
+                className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1 ${
+                  gameMode === 'adventure'
+                    ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                }`}
+              >
+                <Compass className="w-4 h-4" />
+                <span className="text-[11px] font-black">Petualangan</span>
+                <span className="text-[9px] opacity-80">5 Babak Berimbang</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setGameMode('time_attack')}
+                className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1 ${
+                  gameMode === 'time_attack'
+                    ? 'bg-amber-500 text-white border-amber-600 shadow-sm'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                }`}
+              >
+                <Timer className="w-4 h-4" />
+                <span className="text-[11px] font-black">Time Attack</span>
+                <span className="text-[9px] opacity-80">12 Soal Cepat</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setGameMode('boss_battle')}
+                className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1 ${
+                  gameMode === 'boss_battle'
+                    ? 'bg-rose-600 text-white border-rose-700 shadow-sm'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                }`}
+              >
+                <Swords className="w-4 h-4" />
+                <span className="text-[11px] font-black">Boss Battle</span>
+                <span className="text-[9px] opacity-80">Kalahkan Monster</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Walkthrough & Anti-Confusion Card */}
+          <div className="bg-sky-50/80 p-4 rounded-2xl border border-sky-200 space-y-2 text-left">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-lg bg-sky-600 text-white flex items-center justify-center font-black text-xs">
+                💡
+              </span>
+              <span className="text-xs font-black text-sky-950 uppercase tracking-wider">
+                PANDUAN CEPAT (CARA MAIN ANTI BINGUNG):
+              </span>
+            </div>
+            <div className="bg-white p-3 rounded-xl border border-sky-100 space-y-1.5 text-xs">
+              <div className="flex items-start gap-2">
+                <span className="font-black text-sky-700 shrink-0">🎯 Langkah Utama:</span>
+                <span className="font-semibold text-slate-700">{getGameActionGuidance(game.id)}</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="font-black text-teal-700 shrink-0">🌿 Tips Santai:</span>
+                <span className="text-slate-600">Gunakan Mode Santai jika ingin berpikir tenang tanpa hitungan mundur.</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="font-black text-amber-700 shrink-0">⚡ Power-Up:</span>
+                <span className="text-slate-600">Tekan ❄️ Beku, ✂️ 50:50, atau 🛡️ Perisai jika menemui soal sulit!</span>
+              </div>
+            </div>
+          </div>
+
           {/* Rules List */}
           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 text-left">
             <span className="text-xs font-black text-slate-700 uppercase tracking-wider block">
@@ -654,7 +917,9 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
             className="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base shadow-lg hover:shadow-emerald-200 transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
           >
             <Play className="w-5 h-5 fill-current" />
-            <span>MULAI GAME SEKARANG</span>
+            <span>
+              MULAI GAME ({gameMode === 'relaxed' ? 'MODE SANTAI' : gameMode === 'adventure' ? 'PETUALANGAN' : gameMode === 'time_attack' ? 'TIME ATTACK' : 'BOSS BATTLE'})
+            </span>
           </button>
         </div>
       </div>
@@ -736,6 +1001,52 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
             <div className="bg-amber-50 px-4 py-2 rounded-2xl border border-amber-200 text-xs font-black text-amber-800 flex items-center justify-center gap-1.5">
               <Flame className="w-4 h-4 text-amber-600 fill-current" />
               <span>Kombo Tertinggi: {maxCombo}x COMBO!</span>
+            </div>
+          )}
+
+          {/* Interactive Review Drawer */}
+          {roundHistory.length > 0 && (
+            <div className="pt-2 text-left">
+              <button
+                type="button"
+                onClick={() => setShowReview(!showReview)}
+                className="w-full py-2.5 px-4 rounded-2xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-900 font-extrabold text-xs flex items-center justify-between cursor-pointer transition-all"
+              >
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-indigo-600" />
+                  <span>Tinjau Pembahasan & Kunci Jawaban ({roundHistory.filter(h => h.isCorrect).length}/{roundHistory.length} Benar)</span>
+                </div>
+                {showReview ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+
+              {showReview && (
+                <div className="mt-2.5 space-y-2 max-h-60 overflow-y-auto pr-1 animate-in fade-in">
+                  {roundHistory.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-3 rounded-2xl border text-xs ${
+                        item.isCorrect
+                          ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+                          : 'bg-rose-50/70 border-rose-200 text-rose-950'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between font-black mb-1">
+                        <span>Babak {item.round}: {item.question}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
+                          item.isCorrect ? 'bg-emerald-200 text-emerald-800' : 'bg-rose-200 text-rose-800'
+                        }`}>
+                          {item.isCorrect ? 'BENAR ✓' : 'SALAH ✕'}
+                        </span>
+                      </div>
+                      {item.explanation && (
+                        <p className="text-[11px] text-slate-700 font-medium mt-1 bg-white/70 p-2 rounded-xl border border-slate-200/60">
+                          💡 <span className="font-bold">Solusi:</span> {item.explanation}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -830,8 +1141,37 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
           )}
         </div>
 
-        {/* Right: Sound, Timer & Round */}
+        {/* Right: Sound, Tutorial, Timer & Round */}
         <div className="flex items-center gap-2">
+          {/* In-Game Help / Tutorial Button */}
+          <button
+            type="button"
+            onClick={() => {
+              sound.playClick();
+              setShowTutorialModal(true);
+            }}
+            className="p-1.5 px-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold shadow-2xs"
+            title="Lihat Panduan & Petunjuk Cara Main"
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
+            <span className="hidden sm:inline">Panduan</span>
+          </button>
+
+          {/* BGM Toggle */}
+          <button
+            onClick={() => {
+              const state = sound.toggleBgm();
+              setIsBgmOn(state);
+            }}
+            className={`p-1.5 rounded-xl transition-colors cursor-pointer flex items-center gap-1 ${
+              isBgmOn ? 'bg-indigo-100 text-indigo-700 font-bold text-[10px]' : 'bg-slate-100 hover:bg-slate-200 text-slate-500'
+            }`}
+            title={isBgmOn ? 'Musik Latar Aktif' : 'Nyalakan Musik Latar'}
+          >
+            <Music className="w-4 h-4" />
+            <span className="hidden sm:inline text-[10px]">{isBgmOn ? 'BGM ON' : 'BGM'}</span>
+          </button>
+
           <button
             onClick={() => {
               const next = !isMuted;
@@ -844,7 +1184,7 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
             {isMuted ? <VolumeX className="w-4 h-4 text-rose-500" /> : <Volume2 className="w-4 h-4 text-emerald-600" />}
           </button>
 
-          {game.hasTimer && (
+          {game.hasTimer && gameMode !== 'relaxed' && (
             <div
               className={`flex items-center gap-1 px-2.5 py-1 rounded-xl border font-black text-xs ${
                 timeLeft <= 3
@@ -856,9 +1196,103 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
               <span>{timeLeft < 10 ? `0${timeLeft}` : timeLeft}s</span>
             </div>
           )}
+
+          {gameMode === 'relaxed' && (
+            <div className="flex items-center gap-1 px-2 py-1 rounded-xl bg-teal-50 border border-teal-200 text-teal-700 font-bold text-[10px]" title="Mode santai: tanpa batas waktu">
+              <Coffee className="w-3 h-3" />
+              <span className="hidden sm:inline">Santai</span>
+            </div>
+          )}
+
           <span className="text-xs font-black text-slate-400 bg-slate-50 px-2 py-1 rounded-xl border border-slate-200">
             {round}/{totalRounds}
           </span>
+        </div>
+      </div>
+
+      {/* Boss Battle Bar if Boss Mode */}
+      {gameMode === 'boss_battle' && (
+        <div className="bg-gradient-to-r from-rose-950 via-slate-900 to-rose-950 text-white p-3.5 rounded-3xl border border-rose-800 shadow-md space-y-1.5 animate-in fade-in">
+          <div className="flex items-center justify-between text-xs font-black">
+            <span className="flex items-center gap-1.5 text-rose-300">
+              <Swords className="w-4 h-4 text-rose-400" />
+              <span>RAJA MONSTER MATEMATIKA</span>
+            </span>
+            <span className="font-mono text-rose-200">{bossHp} / {bossMaxHp} HP</span>
+          </div>
+          <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden border border-rose-700">
+            <div
+              className="bg-gradient-to-r from-amber-400 via-rose-500 to-red-600 h-full transition-all duration-300 rounded-full"
+              style={{ width: `${(bossHp / bossMaxHp) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Power-Up HUD Bar */}
+      <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-2 px-3 border border-slate-200 shadow-2xs flex items-center justify-between gap-2">
+        <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1">
+          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+          <span>Bantuan:</span>
+        </span>
+        <div className="flex items-center gap-2">
+          {/* Freeze Power-up */}
+          <button
+            type="button"
+            onClick={handleUseFreeze}
+            disabled={!freezeAvailable || freezeActive}
+            className={`px-2.5 py-1 rounded-xl text-xs font-black flex items-center gap-1 transition-all ${
+              freezeActive
+                ? 'bg-sky-500 text-white animate-pulse'
+                : freezeAvailable
+                ? 'bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 cursor-pointer active:scale-95'
+                : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-50'
+            }`}
+            title="Bekukan waktu selama 5 detik"
+          >
+            <Snowflake className="w-3.5 h-3.5" />
+            <span>Beku</span>
+          </button>
+
+          {/* 50:50 Eliminator */}
+          <button
+            type="button"
+            onClick={() => {
+              if (currentContent?.opts && currentContent?.a) {
+                handleUseEliminate(currentContent.opts, currentContent.a);
+              } else if (currentContent?.bubbles && currentContent?.correct) {
+                handleUseEliminate(currentContent.bubbles, currentContent.correct);
+              }
+            }}
+            disabled={!eliminateAvailable}
+            className={`px-2.5 py-1 rounded-xl text-xs font-black flex items-center gap-1 transition-all ${
+              eliminateAvailable
+                ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 cursor-pointer active:scale-95'
+                : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-50'
+            }`}
+            title="Hapus 2 pilihan jawaban salah"
+          >
+            <Zap className="w-3.5 h-3.5" />
+            <span>50:50</span>
+          </button>
+
+          {/* Divine Shield */}
+          <button
+            type="button"
+            onClick={handleUseShield}
+            disabled={!shieldAvailable || shieldActive}
+            className={`px-2.5 py-1 rounded-xl text-xs font-black flex items-center gap-1 transition-all ${
+              shieldActive
+                ? 'bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-300'
+                : shieldAvailable
+                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-pointer active:scale-95'
+                : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-50'
+            }`}
+            title="Perisai: Tahan 1 kesalahan tanpa kehilangan nyawa"
+          >
+            <Shield className="w-3.5 h-3.5" />
+            <span>{shieldActive ? 'Perisai Aktif' : 'Perisai'}</span>
+          </button>
         </div>
       </div>
 
@@ -899,6 +1333,20 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
 
         {/* Render specific game mechanic content */}
         <div>
+          {/* Step-by-Step Action Guidance Banner */}
+          <div className="bg-sky-50/90 border border-sky-200 text-sky-950 rounded-2xl px-3.5 py-2 text-xs font-bold flex items-center justify-between gap-2 shadow-2xs mb-3">
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-5 rounded-md bg-sky-600 text-white flex items-center justify-center font-black text-[10px] shrink-0">
+                🎯
+              </span>
+              <span className="text-left leading-tight">{getGameActionGuidance(game.id)}</span>
+            </div>
+            {gameMode === 'relaxed' && (
+              <span className="shrink-0 text-[10px] bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full font-black">
+                🌿 Mode Santai
+              </span>
+            )}
+          </div>
           {/* QUICK MATH (Game 01) */}
           {game.id === 'quick_math' && (
             <div className="text-center space-y-4 py-4">
@@ -1356,47 +1804,99 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
           game.id !== 'quick_tap' &&
           game.id !== 'true_or_false' && (
             <div className="grid grid-cols-2 gap-3 pt-4">
-              {currentContent.opts.map((opt: any, optIdx: number) => (
-                <button
-                  key={optIdx}
-                  onClick={() => {
-                    const isCorrect =
-                      String(opt) === String(currentContent.a) ||
-                      String(opt) === String(currentContent.part2Ans) ||
-                      String(opt) === String(currentContent.correct) ||
-                      String(opt) === String(currentContent.correctExpr) ||
-                      String(opt) === String(currentContent.text);
-                    handleAnswer(isCorrect, currentContent.exp);
-                  }}
-                  className="h-14 sm:h-16 rounded-2xl bg-white hover:bg-emerald-50 active:bg-emerald-100 border-2 border-slate-200 hover:border-emerald-500 text-lg sm:text-xl font-black text-slate-800 shadow-sm transition-all active:scale-95 cursor-pointer flex items-center justify-center"
-                >
-                  {typeof opt === 'number' && game.id === 'money_master'
-                    ? `Rp${opt.toLocaleString('id-ID')}`
-                    : String(opt)}
-                </button>
-              ))}
+              {currentContent.opts.map((opt: any, optIdx: number) => {
+                const isEliminated = eliminatedOptions.includes(String(opt));
+                return (
+                  <button
+                    key={optIdx}
+                    disabled={isEliminated}
+                    onClick={() => {
+                      const isCorrect =
+                        String(opt) === String(currentContent.a) ||
+                        String(opt) === String(currentContent.part2Ans) ||
+                        String(opt) === String(currentContent.correct) ||
+                        String(opt) === String(currentContent.correctExpr) ||
+                        String(opt) === String(currentContent.text);
+                      handleAnswer(isCorrect, currentContent.exp);
+                    }}
+                    className={`h-14 sm:h-16 rounded-2xl border-2 text-lg sm:text-xl font-black shadow-sm transition-all flex items-center justify-center ${
+                      isEliminated
+                        ? 'opacity-25 line-through bg-slate-100 border-slate-300 text-slate-400 cursor-not-allowed'
+                        : 'bg-white hover:bg-emerald-50 active:bg-emerald-100 border-slate-200 hover:border-emerald-500 text-slate-800 active:scale-95 cursor-pointer'
+                    }`}
+                  >
+                    {typeof opt === 'number' && game.id === 'money_master'
+                      ? `Rp${opt.toLocaleString('id-ID')}`
+                      : String(opt)}
+                  </button>
+                );
+              })}
             </div>
           )}
 
-        {/* 3.4 FEEDBACK BANNER (Correct / Incorrect) */}
+        {/* 3.4 ENHANCED FEEDBACK BANNER (With Advance Button and Read Pause) */}
         {feedback && (
           <div
-            className={`mt-4 p-4 rounded-2xl border text-center animate-in zoom-in-95 ${
+            className={`mt-4 p-4 rounded-2xl border text-center animate-in zoom-in-95 shadow-md ${
               feedback.isCorrect
-                ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-                : 'bg-rose-50 border-rose-300 text-rose-800'
+                ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+                : 'bg-rose-50 border-rose-300 text-rose-950'
             }`}
           >
-            <div className="flex items-center justify-center gap-1.5 font-black text-sm">
-              {feedback.isCorrect ? (
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-              ) : (
-                <XCircle className="w-5 h-5 text-rose-600" />
-              )}
-              <span>{feedback.message}</span>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-2 font-black text-sm text-left">
+                {feedback.isCorrect ? (
+                  <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
+                ) : (
+                  <XCircle className="w-6 h-6 text-rose-600 shrink-0" />
+                )}
+                <span>{feedback.message}</span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 shrink-0">
+                {!isFeedbackPaused && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (feedbackAdvanceTimerRef.current) {
+                        clearTimeout(feedbackAdvanceTimerRef.current);
+                        feedbackAdvanceTimerRef.current = null;
+                      }
+                      setIsFeedbackPaused(true);
+                      sound.playClick();
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+                    title="Hentikan hitungan mundur agar bisa membaca penjelasan"
+                  >
+                    <Pause className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Tahan / Baca</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (feedbackAdvanceTimerRef.current) {
+                      clearTimeout(feedbackAdvanceTimerRef.current);
+                      feedbackAdvanceTimerRef.current = null;
+                    }
+                    sound.playClick();
+                    handleNextRound();
+                  }}
+                  className="px-4 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black shadow-sm active:scale-95 transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Lanjut Sekarang</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
+
             {feedback.explanation && (
-              <p className="text-xs font-semibold mt-1 opacity-90">{feedback.explanation}</p>
+              <div className="text-xs font-semibold mt-3 text-left bg-white/80 p-3 rounded-xl border border-slate-200/80 leading-relaxed">
+                <span className="font-black block text-slate-900 mb-0.5">💡 Penjelasan Konsep:</span>
+                {feedback.explanation}
+              </div>
             )}
           </div>
         )}
@@ -1420,6 +1920,64 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
           )}
         </div>
       </div>
+
+      {/* 3.6 IN-GAME TUTORIAL & HELP MODAL */}
+      {showTutorialModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-slate-200 shadow-2xl space-y-4 animate-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-base">
+                  {game.icon}
+                </span>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">{game.title}</h3>
+                  <p className="text-[11px] text-slate-500 font-bold">{game.subtitle}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowTutorialModal(false)}
+                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-left text-xs">
+              <div className="bg-sky-50 p-3 rounded-2xl border border-sky-200">
+                <span className="font-black text-sky-900 block mb-1">🎯 Cara Bermain Babak Ini:</span>
+                <p className="text-slate-700 font-semibold">{getGameActionGuidance(game.id)}</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <span className="font-black text-slate-800 uppercase tracking-wider text-[11px] block">
+                  Aturan & Petunjuk:
+                </span>
+                {game.rules.map((r, i) => (
+                  <div key={i} className="flex items-start gap-2 text-slate-600 font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                    <span>{r}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-amber-50 p-3 rounded-2xl border border-amber-200 text-amber-950">
+                <span className="font-black block mb-0.5">💡 Tips Power-Up:</span>
+                <p className="text-[11px] font-semibold text-amber-900">
+                  Gunakan ❄️ Beku untuk menghentikan timer 5 detik, ⚡ 50:50 untuk membuang 2 jawaban salah, dan 🛡️ Perisai untuk menahan 1 kesalahan.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowTutorialModal(false)}
+              className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md cursor-pointer transition-transform active:scale-95"
+            >
+              Saya Mengerti! Lanjutkan Main 🎮
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

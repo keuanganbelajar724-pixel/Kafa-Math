@@ -3,6 +3,7 @@ import { MainTabType } from './BottomNavigation';
 import { ChildProfile, ParentSettings } from '../types';
 import { getLevelInfo } from '../services/storage';
 import { sound } from '../services/sound';
+import { GAME_CENTER_METADATA } from '../data/gameCenterData';
 import {
   Home,
   BookOpen,
@@ -48,7 +49,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
   const mainNavItems = [
     { id: 'home' as MainTabType, label: currentLanguage === 'en' ? 'Home' : 'Beranda', icon: Home, badge: null },
     { id: 'theory' as MainTabType, label: currentLanguage === 'en' ? 'Knowledge Hub' : 'Materi & Konsep', icon: Lightbulb, badge: 'Baru' },
-    { id: 'game' as MainTabType, label: currentLanguage === 'en' ? 'Game Center' : 'Game Edukasi', icon: Gamepad2, badge: '47+' },
+    { id: 'game' as MainTabType, label: currentLanguage === 'en' ? 'Game Center' : 'Game Edukasi', icon: Gamepad2, badge: String(GAME_CENTER_METADATA.length) },
     { id: 'workbook' as MainTabType, label: currentLanguage === 'en' ? 'Practice' : 'Latihan Soal', icon: BookOpen, badge: null },
     { id: 'map' as MainTabType, label: currentLanguage === 'en' ? 'Adventure Map' : 'Peta Petualangan', icon: Map, badge: null },
   ];

@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChildProfile, WorkbookOperation } from '../../types';
+import { GAME_CENTER_METADATA } from '../../data/gameCenterData';
 import { sound } from '../../services/sound';
 import { StatCard } from '../ui/StatCard';
 import {
@@ -368,7 +369,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <StatCard
           icon={<Gamepad2 className="w-5 h-5 text-purple-600" />}
           label="Bank Game Edukasi"
-          value="50+ Game"
+          value={`${GAME_CENTER_METADATA.length} Game`}
           highlightColor="purple"
           subtext="Semua Siap Dimainkan"
         />
@@ -474,7 +475,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <div className="flex items-center gap-2">
             <Gamepad2 className="w-5 h-5 text-purple-600" />
             <h3 className="font-black text-slate-900 text-sm sm:text-base">
-              Game Matematika Pilihan (Dari 50+ Game)
+              Game Matematika Pilihan (Dari {GAME_CENTER_METADATA.length} Game)
             </h3>
           </div>
           <button

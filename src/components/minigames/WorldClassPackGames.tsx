@@ -6,12 +6,13 @@ import { RotateCcw, Award, ArrowLeft, Lightbulb, Sparkles, CheckCircle2, Compass
 interface GameProps {
   onExit: () => void;
   onRewardXP: (xp: number, coins: number) => void;
+  onComplete?: (score: number, stars: number) => void;
 }
 
 // ============================================================================
 // GAME 65: ALGEBRA BALANCE SCALE LAB (Laboratorium Neraca Aljabar Visual)
 // ============================================================================
-export const AlgebraBalanceScaleGame: React.FC<GameProps> = ({ onExit, onRewardXP }) => {
+export const AlgebraBalanceScaleGame: React.FC<GameProps> = ({ onExit, onRewardXP, onComplete }) => {
   const levels = [
     {
       id: 1,
@@ -105,6 +106,7 @@ export const AlgebraBalanceScaleGame: React.FC<GameProps> = ({ onExit, onRewardX
           setIsFinished(true);
           sound.playCelebration();
           onRewardXP(65, 35);
+          onComplete?.(score + 120, 3);
         }
       }, 1500);
     } else {
@@ -335,7 +337,7 @@ export const AlgebraBalanceScaleGame: React.FC<GameProps> = ({ onExit, onRewardX
 // ============================================================================
 // GAME 66: COORDINATE TREASURE ISLAND (Pulau Harta Karun Koordinat Kartesius)
 // ============================================================================
-export const CoordinateTreasureIslandGame: React.FC<GameProps> = ({ onExit, onRewardXP }) => {
+export const CoordinateTreasureIslandGame: React.FC<GameProps> = ({ onExit, onRewardXP, onComplete }) => {
   const quests = [
     {
       id: 1,
@@ -416,6 +418,7 @@ export const CoordinateTreasureIslandGame: React.FC<GameProps> = ({ onExit, onRe
           setIsFinished(true);
           sound.playCelebration();
           onRewardXP(70, 40);
+          onComplete?.(score + 150, 3);
         }
       }, 1600);
     } else {

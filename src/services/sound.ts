@@ -746,28 +746,6 @@ class SoundService {
     } catch (e) {}
   }
 
-  // Freeze spell
-  public playFreeze() {
-    if (!this.soundEnabled) return;
-    try {
-      const ctx = this.getAudioContext();
-      if (!ctx) return;
-      const now = ctx.currentTime;
-      [800, 1200, 1600].forEach((freq, idx) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, now + idx * 0.05);
-        gain.gain.setValueAtTime(0.15, now + idx * 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.25);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now + idx * 0.05);
-        osc.stop(now + idx * 0.05 + 0.25);
-      });
-    } catch (e) {}
-  }
-
   public stopSpeaking() {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
