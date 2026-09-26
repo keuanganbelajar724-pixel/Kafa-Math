@@ -465,11 +465,13 @@ export const App: React.FC = () => {
           )}
           {mainTab === 'theory' && (
             <KnowledgeView
+              activeProfile={activeProfile}
               onOpenTopicPractice={(topicId) => {
                 const q = generateQuestion(activeProfile.phase, topicId as any, 1);
                 setCurrentQuestion(q);
               }}
               onLaunchGame={handleLaunchGame}
+              onRewardXP={handleRewardXP}
             />
           )}
           {mainTab === 'game' && (

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { QuestionItem } from '../types';
 import { sound } from '../services/sound';
-import { Volume2, Lightbulb, Bot, CheckCircle, XCircle, Sparkles, ArrowRight, HelpCircle, Globe, Brain, Search, Split } from 'lucide-react';
+import { Volume2, Lightbulb, Bot, CheckCircle, XCircle, Sparkles, ArrowRight, HelpCircle, Globe, Brain, Search, Split, Key } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { InteractiveObjectChests } from './adventure/InteractiveObjectChests';
 
 interface Props {
   question: QuestionItem;
@@ -251,44 +252,18 @@ export const QuestionModal: React.FC<Props> = ({
             </div>
           )}
 
-          {/* Standard Options (if not WODB) */}
+          {/* Interactive Treasure Chests for Choices */}
           {!question.wodbItems && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-              {question.options.map((opt, idx) => {
-                const isSelected = selectedOption === opt;
-                let btnStyle = 'bg-white border-2 border-slate-200 hover:border-amber-400 text-slate-800';
-
-                if (isSelected) {
-                  btnStyle = 'bg-amber-100 border-2 border-amber-500 text-amber-950 shadow-md scale-[1.01]';
-                }
-
-                if (isAnswered) {
-                  const isAccepted = question.acceptedAnswers?.includes(opt);
-                  if (opt.trim() === question.correctAnswer.trim() || isAccepted) {
-                    btnStyle = 'bg-emerald-100 border-2 border-emerald-500 text-emerald-950 font-black shadow-md';
-                  } else if (isSelected && !isCorrect) {
-                    btnStyle = 'bg-rose-100 border-2 border-rose-400 text-rose-950 opacity-80';
-                  } else {
-                    btnStyle = 'bg-slate-50 border-slate-200 text-slate-400 opacity-60';
-                  }
-                }
-
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => handleSelectOption(opt)}
-                    disabled={isAnswered}
-                    className={`p-3.5 rounded-2xl font-bold text-sm md:text-base transition-all cursor-pointer text-left flex items-center justify-between ${btnStyle}`}
-                  >
-                    <span>{opt}</span>
-                    {isSelected && !isAnswered && <span className="w-3 h-3 rounded-full bg-amber-500"></span>}
-                    {isAnswered && (opt.trim() === question.correctAnswer.trim() || question.acceptedAnswers?.includes(opt)) && (
-                      <CheckCircle className="w-5 h-5 text-emerald-600" />
-                    )}
-                    {isAnswered && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-rose-600" />}
-                  </button>
-                );
-              })}
+            <div className="pt-1">
+              <InteractiveObjectChests
+                options={question.options}
+                correctAnswer={question.correctAnswer}
+                selectedOption={selectedOption}
+                isAnswered={isAnswered}
+                onSelectChest={(opt) => {
+                  setSelectedOption(opt);
+                }}
+              />
             </div>
           )}
 

@@ -248,6 +248,106 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
     setEliminatedOptions([]);
   };
 
+  // Interactivities for Game 04: Math Match
+  const handleMatchClickLeft = (pairId: number, totalPairs: number, expText?: string) => {
+    if (matchedPairs.includes(pairId)) return;
+    sound.playClick();
+    setMatchSelectedLeft(pairId);
+    if (matchSelectedRight !== null) {
+      if (pairId === matchSelectedRight) {
+        sound.playCorrect();
+        const updated = [...matchedPairs, pairId];
+        setMatchedPairs(updated);
+        setMatchSelectedLeft(null);
+        setMatchSelectedRight(null);
+        if (updated.length === totalPairs) {
+          handleAnswer(true, expText, 'Kartu Cocok Logika');
+        }
+      } else {
+        sound.playIncorrect();
+        sound.playHaptic('warning');
+        setMatchSelectedLeft(null);
+        setMatchSelectedRight(null);
+      }
+    }
+  };
+
+  const handleMatchClickRight = (pairId: number, totalPairs: number, expText?: string) => {
+    if (matchedPairs.includes(pairId)) return;
+    sound.playClick();
+    setMatchSelectedRight(pairId);
+    if (matchSelectedLeft !== null) {
+      if (pairId === matchSelectedLeft) {
+        sound.playCorrect();
+        const updated = [...matchedPairs, pairId];
+        setMatchedPairs(updated);
+        setMatchSelectedLeft(null);
+        setMatchSelectedRight(null);
+        if (updated.length === totalPairs) {
+          handleAnswer(true, expText, 'Kartu Cocok Logika');
+        }
+      } else {
+        sound.playIncorrect();
+        sound.playHaptic('warning');
+        setMatchSelectedLeft(null);
+        setMatchSelectedRight(null);
+      }
+    }
+  };
+
+  // Interactivities for Game 05: Math Memory
+  const handleMemoryCardClick = (
+    cardIndex: number,
+    card: { id: number; matchKey: string },
+    cards: Array<{ id: number; matchKey: string }>,
+    expText?: string
+  ) => {
+    if (memoryMatched.includes(card.id) || memoryFlipped.includes(cardIndex)) return;
+    if (memoryFlipped.length >= 2) return;
+
+    sound.playClick();
+    const nextFlipped = [...memoryFlipped, cardIndex];
+    setMemoryFlipped(nextFlipped);
+
+    if (nextFlipped.length === 2) {
+      const firstCard = cards[nextFlipped[0]];
+      const secondCard = card;
+
+      if (firstCard.matchKey === secondCard.matchKey) {
+        sound.playCorrect();
+        const updated = [...memoryMatched, firstCard.id, secondCard.id];
+        setMemoryMatched(updated);
+        setMemoryFlipped([]);
+        if (updated.length === cards.length) {
+          handleAnswer(true, expText, 'Memori Matematika');
+        }
+      } else {
+        sound.playIncorrect();
+        setTimeout(() => {
+          setMemoryFlipped([]);
+        }, 900);
+      }
+    }
+  };
+
+  // Interactivities for Game 11: Area Builder
+  const handleToggleAreaTile = (tileIndex: number) => {
+    sound.playClick();
+    setAreaFilledTiles((prev) =>
+      prev.includes(tileIndex) ? prev.filter((i) => i !== tileIndex) : [...prev, tileIndex]
+    );
+  };
+
+  const handleCheckAreaBuilder = (targetArea: number, expText?: string) => {
+    const isCorrect = areaFilledTiles.length === targetArea;
+    const explanation = isCorrect
+      ? expText || `Tepat! Kamu telah membangun bentuk dengan luas ${targetArea} petak satuan!`
+      : areaFilledTiles.length < targetArea
+      ? `Petak masih kurang! Baru ada ${areaFilledTiles.length} petak, dibutuhkan ${targetArea} petak satuan.`
+      : `Petak kelebihan! Kamu memasang ${areaFilledTiles.length} petak, targetnya adalah ${targetArea} petak satuan.`;
+    handleAnswer(isCorrect, explanation, 'Arsitek Luas Persegi');
+  };
+
   // Timer loop
   const resetTimer = (seconds: number) => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -504,6 +604,135 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
         return pool[(round - 1) % pool.length];
       }
 
+      // GAME 04: MATH MATCH (Kartu Cocok Logika)
+      case 'math_match': {
+        const pool = [
+          {
+            pairs: [
+              { id: 1, left: '7 + 8', right: '15' },
+              { id: 2, left: '6 × 4', right: '24' },
+              { id: 3, left: '40 - 15', right: '25' },
+              { id: 4, left: '9 × 3', right: '27' },
+            ],
+            rightOrder: [2, 4, 1, 3],
+            exp: '7+8=15, 6×4=24, 40-15=25, 9×3=27. Semua pasangan cocok!',
+            hint: 'Hitung operasi di sisi kiri terlebih dahulu, lalu temukan jawabannya di sisi kanan.',
+          },
+          {
+            pairs: [
+              { id: 1, left: '5 × 8', right: '40' },
+              { id: 2, left: '50 - 18', right: '32' },
+              { id: 3, left: '12 + 19', right: '31' },
+              { id: 4, left: '36 ÷ 4', right: '9' },
+            ],
+            rightOrder: [3, 1, 4, 2],
+            exp: '5×8=40, 50-18=32, 12+19=31, 36÷4=9. Pasangan tepat!',
+            hint: '36 ÷ 4 = 9, 5 × 8 = 40.',
+          },
+          {
+            pairs: [
+              { id: 1, left: '8 × 7', right: '56' },
+              { id: 2, left: '100 - 35', right: '65' },
+              { id: 3, left: '4 × 12', right: '48' },
+              { id: 4, left: '81 ÷ 9', right: '9' },
+            ],
+            rightOrder: [4, 2, 1, 3],
+            exp: '8×7=56, 100-35=65, 4×12=48, 81÷9=9. Tepat sekali!',
+            hint: '8 × 7 = 56, 100 - 35 = 65.',
+          },
+          {
+            pairs: [
+              { id: 1, left: '15 × 2', right: '30' },
+              { id: 2, left: '75 - 25', right: '50' },
+              { id: 3, left: '9 × 9', right: '81' },
+              { id: 4, left: '64 ÷ 8', right: '8' },
+            ],
+            rightOrder: [2, 1, 4, 3],
+            exp: '15×2=30, 75-25=50, 9×9=81, 64÷8=8.',
+            hint: '9 × 9 = 81, 64 ÷ 8 = 8.',
+          },
+          {
+            pairs: [
+              { id: 1, left: '25 + 25', right: '50' },
+              { id: 2, left: '11 × 6', right: '66' },
+              { id: 3, left: '90 - 45', right: '45' },
+              { id: 4, left: '7 × 7', right: '49' },
+            ],
+            rightOrder: [3, 1, 2, 4],
+            exp: '25+25=50, 11×6=66, 90-45=45, 7×7=49.',
+            hint: '11 × 6 = 66, 7 × 7 = 49.',
+          },
+        ];
+        return pool[(round - 1) % pool.length];
+      }
+
+      // GAME 05: MATH MEMORY (Memori Matematika)
+      case 'math_memory': {
+        const pool = [
+          {
+            cards: [
+              { id: 1, matchKey: 'pairA', label: '4 × 5' },
+              { id: 2, matchKey: 'pairB', label: '18 + 12' },
+              { id: 3, matchKey: 'pairA', label: '20' },
+              { id: 4, matchKey: 'pairC', label: '7 × 3' },
+              { id: 5, matchKey: 'pairB', label: '30' },
+              { id: 6, matchKey: 'pairC', label: '21' },
+            ],
+            exp: '4×5 = 20, 18+12 = 30, 7×3 = 21. Ingatanmu sangat tajam!',
+            hint: 'Ingat posisi kartu angka dan hitungannya saat dibuka!',
+          },
+          {
+            cards: [
+              { id: 1, matchKey: 'pairA', label: '9 × 2' },
+              { id: 2, matchKey: 'pairB', label: '15 + 15' },
+              { id: 3, matchKey: 'pairC', label: '8 × 4' },
+              { id: 4, matchKey: 'pairA', label: '18' },
+              { id: 5, matchKey: 'pairC', label: '32' },
+              { id: 6, matchKey: 'pairB', label: '30' },
+            ],
+            exp: '9×2 = 18, 15+15 = 30, 8×4 = 32. Pasangan memori sempurna!',
+            hint: 'Cari kartu dengan nilai hasil yang sama.',
+          },
+          {
+            cards: [
+              { id: 1, matchKey: 'pairA', label: '6 × 6' },
+              { id: 2, matchKey: 'pairB', label: '50 - 25' },
+              { id: 3, matchKey: 'pairB', label: '25' },
+              { id: 4, matchKey: 'pairC', label: '10 × 4' },
+              { id: 5, matchKey: 'pairA', label: '36' },
+              { id: 6, matchKey: 'pairC', label: '40' },
+            ],
+            exp: '6×6 = 36, 50-25 = 25, 10×4 = 40. Sangat fokus!',
+            hint: 'Perhatikan kartu yang sudah pernah dibuka.',
+          },
+          {
+            cards: [
+              { id: 1, matchKey: 'pairA', label: '8 × 6' },
+              { id: 2, matchKey: 'pairC', label: '50 + 20' },
+              { id: 3, matchKey: 'pairB', label: '100 ÷ 2' },
+              { id: 4, matchKey: 'pairA', label: '48' },
+              { id: 5, matchKey: 'pairB', label: '50' },
+              { id: 6, matchKey: 'pairC', label: '70' },
+            ],
+            exp: '8×6 = 48, 100÷2 = 50, 50+20 = 70. Hebat sekali!',
+            hint: '8 × 6 = 48.',
+          },
+          {
+            cards: [
+              { id: 1, matchKey: 'pairA', label: '7 × 7' },
+              { id: 2, matchKey: 'pairB', label: '60 - 15' },
+              { id: 3, matchKey: 'pairC', label: '9 × 6' },
+              { id: 4, matchKey: 'pairA', label: '49' },
+              { id: 5, matchKey: 'pairB', label: '45' },
+              { id: 6, matchKey: 'pairC', label: '54' },
+            ],
+            exp: '7×7 = 49, 60-15 = 45, 9×6 = 54. Selamat kamu mengingat semuanya!',
+            hint: '7 × 7 = 49, 9 × 6 = 54.',
+          },
+        ];
+        return pool[(round - 1) % pool.length];
+      }
+
       // GAME 06: FRACTION PIZZA
       case 'fraction_pizza': {
         const pool = [
@@ -560,6 +789,53 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
           { q: 'Berapa jumlah titik sudut pada bangun SEGITIGA?', correct: '3 Sudut', opts: ['2 Sudut', '3 Sudut', '4 Sudut', '5 Sudut'], exp: 'Segitiga selalu memiliki 3 sisi dan 3 titik sudut.', hint: 'Sesuai namanya: segi-tiga.' },
           { q: 'Bangun datar dengan 2 pasang sisi sejajar dan 4 sudut siku-siku adalah:', correct: 'Persegi Panjang', opts: ['Persegi Panjang', 'Segitiga Sama Sisi', 'Belah Ketupat', 'Layang-Layang'], exp: 'Persegi panjang memiliki sisi berhadapan sejajar dan sudut siku-siku.', hint: 'Bentuk seperti layar buku atau papan tulis.' },
           { q: 'Berapa jumlah sisi pada bangun SEGI ENAM (Heksagon)?', correct: '6 Sisi', opts: ['5 Sisi', '6 Sisi', '7 Sisi', '8 Sisi'], exp: 'Segi enam (heksagon) memiliki 6 sisi lurus.', hint: 'Heksagon = 6 sisi.' },
+        ];
+        return pool[(round - 1) % pool.length];
+      }
+
+      // GAME 11: AREA BUILDER (Arsitek Luas Persegi)
+      case 'area_builder': {
+        const pool = [
+          {
+            targetArea: 6,
+            gridRows: 4,
+            gridCols: 4,
+            prompt: 'Arsitek Cilik: Bangun lantai dengan Luas TEPAT 6 petak satuan!',
+            exp: 'Kamu mewarnai tepat 6 petak satuan. Luas bangun = 6 satuan persegi!',
+            hint: 'Sentuh 6 buah kotak mana saja pada denah lantai.',
+          },
+          {
+            targetArea: 8,
+            gridRows: 4,
+            gridCols: 4,
+            prompt: 'Arsitek Cilik: Buat denah ruangan dengan Luas 8 petak satuan!',
+            exp: 'Tepat 8 petak! Luas = 8 satuan persegi.',
+            hint: 'Sentuh 8 kotak (misal 2 baris penuh atau bentuk L/persegi panjang).',
+          },
+          {
+            targetArea: 9,
+            gridRows: 4,
+            gridCols: 4,
+            prompt: 'Arsitek Cilik: Buat taman persegi dengan Luas 9 petak (3 × 3)!',
+            exp: 'Sempurna! 9 petak terpasang (3 baris × 3 kolom = 9 petak).',
+            hint: 'Isi 9 petak satuan.',
+          },
+          {
+            targetArea: 10,
+            gridRows: 4,
+            gridCols: 4,
+            prompt: 'Arsitek Cilik: Pasang keramik aula dengan Luas 10 petak satuan!',
+            exp: '10 petak terpasang rapi! Luas = 10 petak.',
+            hint: 'Sentuh 10 petak kotak pada kisi lantai.',
+          },
+          {
+            targetArea: 12,
+            gridRows: 4,
+            gridCols: 4,
+            prompt: 'Arsitek Cilik: Bangun kolam renang dengan Luas 12 petak satuan!',
+            exp: 'Hebat! 12 petak berhasil dibangun (hanya menyisakan 4 petak kosong).',
+            hint: '16 petak total dikurangi 4 petak kosong = 12 petak.',
+          },
         ];
         return pool[(round - 1) % pool.length];
       }
@@ -1409,6 +1685,131 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
             </div>
           )}
 
+          {/* MATH MATCH (Game 04) */}
+          {game.id === 'math_match' && currentContent?.pairs && (
+            <div className="space-y-4 py-2">
+              <div className="text-center">
+                <span className="text-xs font-black text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200">
+                  🃏 COCOKKAN SOAL & HASILNYA
+                </span>
+                <p className="text-xs text-slate-500 font-semibold mt-1">
+                  Pilih 1 operasi di kiri, lalu pilih jawabannya di kanan ({matchedPairs.length}/{currentContent.pairs.length} Cocok)
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
+                {/* Left Column: Equations */}
+                <div className="space-y-2.5">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block text-center">
+                    Operasi Hitung
+                  </span>
+                  {currentContent.pairs.map((p: any) => {
+                    const isMatched = matchedPairs.includes(p.id);
+                    const isSelected = matchSelectedLeft === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        disabled={isMatched}
+                        onClick={() => handleMatchClickLeft(p.id, currentContent.pairs.length, currentContent.exp)}
+                        className={`w-full py-3.5 px-3 rounded-2xl border-2 font-black text-base transition-all active:scale-95 flex items-center justify-between shadow-xs ${
+                          isMatched
+                            ? 'bg-emerald-50 border-emerald-300 text-emerald-800 cursor-not-allowed opacity-80'
+                            : isSelected
+                            ? 'bg-indigo-600 text-white border-indigo-700 ring-4 ring-indigo-200 scale-102 cursor-pointer'
+                            : 'bg-white hover:bg-indigo-50/70 border-slate-200 text-slate-800 hover:border-indigo-300 cursor-pointer'
+                        }`}
+                      >
+                        <span className="ml-1">{p.left}</span>
+                        {isMatched ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        ) : isSelected ? (
+                          <span className="text-xs bg-white/20 px-2 py-0.5 rounded-md">Dipilih</span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Right Column: Answers (pre-shuffled by rightOrder) */}
+                <div className="space-y-2.5">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block text-center">
+                    Hasil Nilai
+                  </span>
+                  {currentContent.rightOrder.map((pairId: number) => {
+                    const p = currentContent.pairs.find((x: any) => x.id === pairId);
+                    if (!p) return null;
+                    const isMatched = matchedPairs.includes(p.id);
+                    const isSelected = matchSelectedRight === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        disabled={isMatched}
+                        onClick={() => handleMatchClickRight(p.id, currentContent.pairs.length, currentContent.exp)}
+                        className={`w-full py-3.5 px-3 rounded-2xl border-2 font-black text-base transition-all active:scale-95 flex items-center justify-between shadow-xs ${
+                          isMatched
+                            ? 'bg-emerald-50 border-emerald-300 text-emerald-800 cursor-not-allowed opacity-80'
+                            : isSelected
+                            ? 'bg-indigo-600 text-white border-indigo-700 ring-4 ring-indigo-200 scale-102 cursor-pointer'
+                            : 'bg-white hover:bg-indigo-50/70 border-slate-200 text-slate-800 hover:border-indigo-300 cursor-pointer'
+                        }`}
+                      >
+                        <span className="ml-1">{p.right}</span>
+                        {isMatched ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        ) : isSelected ? (
+                          <span className="text-xs bg-white/20 px-2 py-0.5 rounded-md">Dipilih</span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MATH MEMORY (Game 05) */}
+          {game.id === 'math_memory' && currentContent?.cards && (
+            <div className="space-y-4 py-2">
+              <div className="text-center">
+                <span className="text-xs font-black text-violet-700 bg-violet-50 px-3 py-1 rounded-full border border-violet-200">
+                  🧠 DAYA INGAT MATEMATIKA
+                </span>
+                <p className="text-xs text-slate-500 font-semibold mt-1">
+                  Buka 2 kartu yang nilainya sama ({memoryMatched.length / 2} dari {currentContent.cards.length / 2} Pasang Terbuka)
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 max-w-md mx-auto pt-2">
+                {currentContent.cards.map((c: any, cIdx: number) => {
+                  const isFlipped = memoryFlipped.includes(cIdx);
+                  const isMatched = memoryMatched.includes(c.id);
+                  const isRevealed = isFlipped || isMatched;
+
+                  return (
+                    <button
+                      key={c.id}
+                      disabled={isRevealed}
+                      onClick={() => handleMemoryCardClick(cIdx, c, currentContent.cards, currentContent.exp)}
+                      className={`h-20 sm:h-24 rounded-2xl border-2 font-black transition-all flex items-center justify-center text-center p-2 shadow-xs cursor-pointer active:scale-95 ${
+                        isMatched
+                          ? 'bg-emerald-50 border-emerald-400 text-emerald-800 text-lg shadow-sm cursor-default'
+                          : isFlipped
+                          ? 'bg-violet-600 border-violet-700 text-white text-lg ring-4 ring-violet-200'
+                          : 'bg-gradient-to-br from-indigo-50 to-purple-50 hover:bg-indigo-100 border-indigo-200 text-indigo-400 text-2xl'
+                      }`}
+                    >
+                      {isRevealed ? (
+                        <span className="animate-in zoom-in-75 font-black">{c.label}</span>
+                      ) : (
+                        <span>✨</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* FRACTION PIZZA (Game 06) */}
           {game.id === 'fraction_pizza' && (
             <div className="text-center space-y-3 py-2">
@@ -1544,6 +1945,69 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
               <h3 className="text-lg sm:text-xl font-black text-slate-900">
                 {currentContent.q}
               </h3>
+            </div>
+          )}
+
+          {/* AREA BUILDER (Game 11) */}
+          {game.id === 'area_builder' && currentContent && (
+            <div className="text-center space-y-4 py-2">
+              <span className="text-xs font-black text-teal-700 bg-teal-50 px-3 py-1 rounded-full border border-teal-200">
+                🧱 ARSITEK DENAH & LUAS PERSEGI
+              </span>
+              <p className="text-sm font-black text-slate-800">
+                {currentContent.prompt}
+              </p>
+
+              {/* Progress Chip */}
+              <div className="flex items-center justify-center gap-2">
+                <div className="bg-slate-100 px-3 py-1 rounded-xl text-xs font-bold text-slate-700 border border-slate-200">
+                  Petak Terpasang: <span className={`font-black text-sm ${areaFilledTiles.length === currentContent.targetArea ? 'text-emerald-600' : 'text-slate-900'}`}>{areaFilledTiles.length}</span> / <span className="font-black">{currentContent.targetArea}</span> petak
+                </div>
+              </div>
+
+              {/* Interactive Grid (4x4) */}
+              <div className="inline-grid grid-cols-4 gap-2 p-3 bg-slate-900 rounded-3xl shadow-inner border-4 border-slate-800">
+                {Array.from({ length: 16 }).map((_, tileIdx) => {
+                  const isFilled = areaFilledTiles.includes(tileIdx);
+                  return (
+                    <button
+                      key={tileIdx}
+                      type="button"
+                      onClick={() => handleToggleAreaTile(tileIdx)}
+                      className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl border-2 transition-all active:scale-90 flex items-center justify-center text-xl font-black cursor-pointer ${
+                        isFilled
+                          ? 'bg-emerald-500 border-emerald-300 text-white shadow-md shadow-emerald-500/50 scale-102'
+                          : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-500'
+                      }`}
+                      title={`Petak ${tileIdx + 1}`}
+                    >
+                      {isFilled ? '🟩' : '·'}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Control Buttons */}
+              <div className="flex items-center justify-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setAreaFilledTiles([]);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+                >
+                  Kosongkan Petak
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleCheckAreaBuilder(currentContent.targetArea, currentContent.exp)}
+                  className="px-6 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>PERIKSA BANGUN ARSITEK</span>
+                  <CheckCircle2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
 
@@ -1796,6 +2260,9 @@ export const KafaGamePlayer: React.FC<KafaGamePlayerProps> = ({
 
         {/* 3.3 OPTIONS BUTTONS (For games that use 4-option selection) */}
         {currentContent?.opts &&
+          game.id !== 'math_match' &&
+          game.id !== 'math_memory' &&
+          game.id !== 'area_builder' &&
           game.id !== 'math_sort' &&
           game.id !== 'greater_or_less' &&
           game.id !== 'number_catch' &&

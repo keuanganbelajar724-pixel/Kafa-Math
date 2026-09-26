@@ -197,9 +197,9 @@ export const MapView: React.FC<MapViewProps> = ({ activeProfile, onSelectNode })
                           <span>⭐⭐⭐</span>
                         </div>
                       ) : isLocked ? (
-                        <div className="flex items-center gap-1 text-slate-400 font-bold text-xs">
-                          <Lock className="w-4 h-4" />
-                          <span>Terkunci</span>
+                        <div className="flex items-center gap-1 text-amber-800 bg-amber-100/90 px-2 py-0.5 rounded-lg font-black text-[10px] border border-amber-300">
+                          <Lock className="w-3 h-3 text-amber-700" />
+                          <span>Buka Pos {idx} Terlebih Dahulu</span>
                         </div>
                       ) : (
                         <span className="flex items-center gap-1 text-xs font-black text-orange-600 bg-orange-100 px-2 py-0.5 rounded-lg animate-bounce">
