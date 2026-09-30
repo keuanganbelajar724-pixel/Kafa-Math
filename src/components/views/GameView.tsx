@@ -44,6 +44,23 @@ export const GameView: React.FC<GameViewProps> = ({
     completed: 2,
     total: 3,
   });
+  const [dailyChestClaimed, setDailyChestClaimed] = useState<boolean>(false);
+
+  const handleClaimDailyChest = () => {
+    if (dailyChestClaimed || dailyProgress.completed < dailyProgress.total) return;
+    sound.playFanfare();
+    sound.playCoin();
+    setDailyChestClaimed(true);
+    if (onRewardXP) {
+      onRewardXP(100, 50);
+    }
+  };
+
+  const handlePlayDailyQuest = () => {
+    sound.playPowerUp();
+    const questGame = GAME_CENTER_METADATA.find(g => g.id === 'quick_math_sprint') || GAME_CENTER_METADATA[0];
+    handleSelectGame(questGame);
+  };
 
   // Categories list
   const CATEGORIES: { id: GameCategoryId; label: string; icon: string }[] = [
@@ -234,6 +251,67 @@ export const GameView: React.FC<GameViewProps> = ({
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 1.5 DAILY QUEST & MYSTERY CHEST BANNER                                   */}
+      {/* ========================================================================= */}
+      <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 rounded-3xl p-5 sm:p-6 text-white shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-5">
+        <div className="flex items-center gap-4 z-10">
+          <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm border-2 border-yellow-200/50 flex items-center justify-center text-3xl shadow-inner shrink-0 animate-bounce" style={{ animationDuration: '3s' }}>
+            {dailyChestClaimed ? '🌟' : dailyProgress.completed >= dailyProgress.total ? '🎁' : '📜'}
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="bg-white/25 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider">
+                Misi Harian Ceria
+              </span>
+              <span className="text-yellow-200 text-xs font-bold">
+                Tantangan 3 Game Hari Ini
+              </span>
+            </div>
+            <h3 className="text-lg sm:text-xl font-black tracking-tight">
+              {dailyChestClaimed
+                ? 'Peti Hadiah Harian Sudah Diklaim!'
+                : dailyProgress.completed >= dailyProgress.total
+                ? 'Hore! Peti Harta Karun Siap Dibuka!'
+                : `Selesaikan ${dailyProgress.total - dailyProgress.completed} Game Lagi untuk Buka Peti Emas!`}
+            </h3>
+            <div className="flex items-center gap-3 mt-2 text-xs font-bold">
+              <div className="w-36 sm:w-48 h-2.5 bg-black/30 rounded-full overflow-hidden border border-white/20">
+                <div
+                  className="h-full bg-yellow-300 rounded-full transition-all duration-500"
+                  style={{ width: `${(dailyProgress.completed / dailyProgress.total) * 100}%` }}
+                />
+              </div>
+              <span className="text-yellow-100 font-black">
+                {dailyProgress.completed}/{dailyProgress.total} Selesai
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 z-10 w-full md:w-auto justify-end">
+          {dailyChestClaimed ? (
+            <div className="px-5 py-2.5 rounded-2xl bg-black/20 text-yellow-200 font-black text-xs border border-white/20 flex items-center gap-1.5">
+              <span>✅ Hadiah Hari Ini Diterima (+100 XP, +50 🪙)</span>
+            </div>
+          ) : dailyProgress.completed >= dailyProgress.total ? (
+            <button
+              onClick={handleClaimDailyChest}
+              className="w-full md:w-auto px-6 py-3 rounded-2xl bg-yellow-300 hover:bg-yellow-200 text-amber-950 font-black text-sm shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 animate-pulse"
+            >
+              <span>🎁 Buka Peti Emas Sekarang!</span>
+            </button>
+          ) : (
+            <button
+              onClick={handlePlayDailyQuest}
+              className="w-full md:w-auto px-5 py-2.5 rounded-2xl bg-white text-orange-600 hover:bg-orange-50 font-black text-xs shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <span>⚡ Mainkan Game Misi Hari Ini</span>
+            </button>
+          )}
         </div>
       </div>
 

@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { sound } from '../../../services/sound';
 import { KnowledgeArticle } from '../../../data/knowledgeArticlesData';
+import { InteractiveObjectChests } from '../../adventure/InteractiveObjectChests';
+import { InteractiveConceptVisualizer } from './InteractiveConceptVisualizer';
+import confetti from 'canvas-confetti';
 import {
   X,
   Volume2,
@@ -14,6 +17,7 @@ import {
   ChevronRight,
   Play,
   RotateCcw,
+  Bot,
 } from 'lucide-react';
 
 interface ConceptDetailModalProps {
@@ -25,6 +29,7 @@ interface ConceptDetailModalProps {
   onOpenTopicPractice?: (topicId: string) => void;
   onRewardXP?: (xp: number, reason: string) => void;
   onOpenLab?: (labId: string) => void;
+  onAskAITutor?: (article: KnowledgeArticle) => void;
 }
 
 const ARTICLE_LAB_MAP: Record<string, { labId: string; labTitle: string }> = {
@@ -61,6 +66,7 @@ export const ConceptDetailModal: React.FC<ConceptDetailModalProps> = ({
   onOpenTopicPractice,
   onRewardXP,
   onOpenLab,
+  onAskAITutor,
 }) => {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [quizSubmitted, setQuizSubmitted] = useState(false);
@@ -152,19 +158,34 @@ export const ConceptDetailModal: React.FC<ConceptDetailModalProps> = ({
         <div className="p-5 sm:p-6 overflow-y-auto space-y-5 text-slate-800">
           {/* Key Concept Box */}
           <div className="bg-indigo-50/80 rounded-2xl p-4 border border-indigo-200 space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <span className="text-xs font-black uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-indigo-600" />
                 Inti Konsep Utama
               </span>
-              <button
-                onClick={handleSpeak}
-                className="flex items-center gap-1 text-xs font-bold text-indigo-700 bg-white px-2.5 py-1 rounded-xl border border-indigo-200 hover:bg-indigo-50 cursor-pointer shadow-2xs"
-                title="Dengarkan Suara"
-              >
-                <Volume2 className="w-3.5 h-3.5" />
-                <span>Bacakan</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {onAskAITutor && (
+                  <button
+                    onClick={() => {
+                      sound.playClick();
+                      onAskAITutor(article);
+                    }}
+                    className="flex items-center gap-1 text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded-xl border border-indigo-400 cursor-pointer shadow-xs transition-transform active:scale-95"
+                    title="Tanya AI Guru Pintar tentang materi ini"
+                  >
+                    <Bot className="w-3.5 h-3.5 text-cyan-300" />
+                    <span>Tanya AI Guru</span>
+                  </button>
+                )}
+                <button
+                  onClick={handleSpeak}
+                  className="flex items-center gap-1 text-xs font-bold text-indigo-700 bg-white px-2.5 py-1 rounded-xl border border-indigo-200 hover:bg-indigo-50 cursor-pointer shadow-2xs"
+                  title="Dengarkan Suara"
+                >
+                  <Volume2 className="w-3.5 h-3.5" />
+                  <span>Bacakan</span>
+                </button>
+              </div>
             </div>
             <p className="text-sm font-semibold text-indigo-950 leading-relaxed">
               {article.keyConcept}
@@ -190,6 +211,9 @@ export const ConceptDetailModal: React.FC<ConceptDetailModalProps> = ({
               ))}
             </div>
           </div>
+
+          {/* Concrete Interactive Simulator Widget */}
+          <InteractiveConceptVisualizer articleId={article.id} />
 
           {/* Sample Problem */}
           {article.sampleProblem && (
@@ -224,47 +248,33 @@ export const ConceptDetailModal: React.FC<ConceptDetailModalProps> = ({
                 {article.quiz.question}
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {article.quiz.options.map((opt, oIdx) => {
-                  const isSelected = selectedOption === oIdx;
-                  let btnStyle = 'bg-white/10 hover:bg-white/15 text-white border-white/20';
-
-                  if (quizSubmitted) {
-                    if (oIdx === article.quiz!.correctIndex) {
-                      btnStyle = 'bg-emerald-500 text-white border-emerald-400 shadow-md font-black';
-                    } else if (isSelected) {
-                      btnStyle = 'bg-rose-500/80 text-white border-rose-400';
-                    }
-                  } else if (isSelected) {
-                    btnStyle = 'bg-indigo-600 text-white border-indigo-400 ring-2 ring-indigo-300';
-                  }
-
-                  return (
-                    <button
-                      key={oIdx}
-                      disabled={quizSubmitted}
-                      onClick={() => handleOptionClick(oIdx)}
-                      className={`p-3 rounded-2xl text-xs sm:text-sm font-bold border text-left transition-all cursor-pointer ${btnStyle}`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center font-mono text-xs shrink-0">
-                          {String.fromCharCode(65 + oIdx)}
-                        </span>
-                        <span>{opt}</span>
-                      </div>
-                    </button>
-                  );
-                })}
+              {/* Interactive Chests for Concept Quiz */}
+              <div className="pt-1">
+                <InteractiveObjectChests
+                  options={article.quiz.options}
+                  correctAnswer={article.quiz.options[article.quiz.correctIndex]}
+                  selectedOption={selectedOption !== null ? article.quiz.options[selectedOption] : null}
+                  isAnswered={quizSubmitted}
+                  onSelectChest={(opt, oIdx) => {
+                    if (quizSubmitted) return;
+                    setSelectedOption(oIdx);
+                    setTimeout(() => {
+                      setQuizSubmitted(true);
+                      const correct = oIdx === article.quiz!.correctIndex;
+                      setIsCorrect(correct);
+                      if (correct) {
+                        sound.playCorrect();
+                        sound.playCoin();
+                        confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
+                        if (!isMastered) onToggleMastered(article.id);
+                        if (onRewardXP) onRewardXP(15, `Memahami Konsep: ${article.title}`);
+                      } else {
+                        sound.playIncorrect();
+                      }
+                    }, 350);
+                  }}
+                />
               </div>
-
-              {!quizSubmitted && selectedOption !== null && (
-                <button
-                  onClick={handleCheckQuiz}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-indigo-950 font-black text-xs cursor-pointer shadow-md transition-all active:scale-95"
-                >
-                  Periksa Jawaban Kuis ✨
-                </button>
-              )}
 
               {quizSubmitted && (
                 <div

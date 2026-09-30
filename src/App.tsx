@@ -472,6 +472,22 @@ export const App: React.FC = () => {
               }}
               onLaunchGame={handleLaunchGame}
               onRewardXP={handleRewardXP}
+              onAskAITutor={(art) => {
+                setCurrentQuestion({
+                  id: art.id,
+                  phase: activeProfile.phase,
+                  grade: art.gradeBadge,
+                  topicId: art.id,
+                  topicTitle: art.title,
+                  competency: art.subtitle,
+                  difficulty: 1,
+                  question: `Bagaimana cara memahami materi "${art.title}" dengan cara yang seru dan mudah dimengerti anak? (Konsep: ${art.keyConcept})`,
+                  options: ['Paham!', 'Beri Contoh Nyata'],
+                  correctAnswer: 'Paham!',
+                  explanation: art.keyConcept,
+                } as any);
+                setShowAITutor(true);
+              }}
             />
           )}
           {mainTab === 'game' && (

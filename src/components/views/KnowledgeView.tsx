@@ -50,6 +50,7 @@ interface KnowledgeViewProps {
   onOpenTopicPractice?: (topicId: string) => void;
   onLaunchGame?: (gameId: string) => void;
   onRewardXP?: (xp: number, reason: string) => void;
+  onAskAITutor?: (article: KnowledgeArticle) => void;
 }
 
 type ViewMode = 'roadmap' | 'labs' | 'articles' | 'mental_hacks';
@@ -60,6 +61,7 @@ export const KnowledgeView: React.FC<KnowledgeViewProps> = ({
   onOpenTopicPractice,
   onLaunchGame,
   onRewardXP,
+  onAskAITutor,
 }) => {
   // Navigation View Mode
   const [viewMode, setViewMode] = useState<ViewMode>('roadmap');
@@ -567,6 +569,7 @@ export const KnowledgeView: React.FC<KnowledgeViewProps> = ({
           onOpenTopicPractice={onOpenTopicPractice}
           onRewardXP={onRewardXP}
           onOpenLab={handleJumpToLab}
+          onAskAITutor={onAskAITutor}
         />
       )}
     </div>

@@ -88,6 +88,10 @@ interface InteractiveWorldStageProps {
   hearts: number; // Player lives (3 max)
   keysCount: number;
   gemsCount: number;
+  comboStreak?: number;
+  soundEnabled?: boolean;
+  onToggleSound?: () => void;
+  onTapCharacter?: () => void;
   onSecretFound?: (type: 'coin' | 'xp' | 'lore', message: string) => void;
   children: React.ReactNode;
 }
@@ -106,6 +110,10 @@ export const InteractiveWorldStage: React.FC<InteractiveWorldStageProps> = ({
   hearts = 3,
   keysCount = 0,
   gemsCount = 0,
+  comboStreak = 0,
+  soundEnabled = true,
+  onToggleSound,
+  onTapCharacter,
   onSecretFound,
   children,
 }) => {
@@ -116,6 +124,20 @@ export const InteractiveWorldStage: React.FC<InteractiveWorldStageProps> = ({
   const [crystalFound, setCrystalFound] = useState(false);
   const [balloonFound, setBalloonFound] = useState(false);
   const [floatingBonusText, setFloatingBonusText] = useState<{ id: number; text: string; x: number; y: number } | null>(null);
+
+  // Dynamic Day/Sunset/Night Atmosphere
+  const [atmosphere, setAtmosphere] = useState<'day' | 'sunset' | 'night'>('day');
+  const [isMusicOn, setIsMusicOn] = useState<boolean>(sound.bgmEnabled);
+
+  const handleCycleAtmosphere = () => {
+    sound.playClick();
+    setAtmosphere((prev) => (prev === 'day' ? 'sunset' : prev === 'sunset' ? 'night' : 'day'));
+  };
+
+  const handleToggleMusic = () => {
+    const active = sound.toggleBgm();
+    setIsMusicOn(active);
+  };
 
   const handleTriggerSecret = (type: 'coin' | 'xp' | 'lore', x: number, y: number) => {
     sound.playCoin();
@@ -135,16 +157,26 @@ export const InteractiveWorldStage: React.FC<InteractiveWorldStageProps> = ({
   return (
     <div className="relative w-full overflow-hidden rounded-3xl border-4 border-amber-300 shadow-2xl bg-slate-900 select-none flex flex-col min-h-[460px] sm:min-h-[520px]">
       {/* 1. Dynamic Animated Sky & Atmosphere */}
-      <div className={`absolute inset-0 bg-gradient-to-b ${theme.skyGradient} transition-colors duration-1000`}>
+      <div
+        className={`absolute inset-0 bg-gradient-to-b transition-colors duration-1000 ${
+          atmosphere === 'night'
+            ? 'from-indigo-950 via-purple-950 to-slate-950'
+            : atmosphere === 'sunset'
+            ? 'from-amber-600 via-rose-700 to-indigo-950'
+            : theme.skyGradient
+        }`}
+      >
         {/* Floating clouds / celestial objects */}
         <div className="absolute top-4 left-6 animate-pulse opacity-80 pointer-events-none">
-          <span className="text-4xl">☁️</span>
+          <span className="text-4xl">
+            {atmosphere === 'night' ? '🌙' : atmosphere === 'sunset' ? '🌅' : '☀️'}
+          </span>
         </div>
         <div className="absolute top-8 right-16 animate-bounce opacity-70 pointer-events-none" style={{ animationDuration: '4s' }}>
-          <span className="text-3xl">⛅</span>
+          <span className="text-3xl">{atmosphere === 'night' ? '⭐' : '⛅'}</span>
         </div>
         <div className="absolute top-3 left-1/3 opacity-60 pointer-events-none text-2xl">
-          ☁️
+          {atmosphere === 'night' ? '✨' : '☁️'}
         </div>
 
         {/* Ambient floating nature particles */}
@@ -159,7 +191,7 @@ export const InteractiveWorldStage: React.FC<InteractiveWorldStageProps> = ({
                 animationDuration: `${3 + idx}s`,
               }}
             >
-              {emoji}
+              {atmosphere === 'night' ? (idx % 2 === 0 ? '✨' : '⭐') : emoji}
             </span>
           ))}
         </div>
@@ -211,8 +243,16 @@ export const InteractiveWorldStage: React.FC<InteractiveWorldStageProps> = ({
           </div>
         )}
 
-        {/* Right: Player Stats (Hearts, Keys, Gems) */}
+        {/* Right: Player Stats (Hearts, Keys, Gems, Combo) */}
         <div className="flex items-center gap-2 sm:gap-3 bg-black/50 px-3 py-1.5 rounded-2xl border border-white/20 text-xs font-black">
+          {/* Combo Streak */}
+          {comboStreak > 1 && (
+            <div className="flex items-center gap-1 text-orange-400 bg-orange-950/80 px-2 py-0.5 rounded-lg border border-orange-500/50 animate-pulse">
+              <span>🔥</span>
+              <span>x{comboStreak}</span>
+            </div>
+          )}
+
           {/* Player Hearts */}
           <div className="flex items-center gap-1" title="Energi Pemain">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -240,6 +280,46 @@ export const InteractiveWorldStage: React.FC<InteractiveWorldStageProps> = ({
             <span>💎</span>
             <span>{gemsCount}</span>
           </div>
+
+          {/* Atmosphere Weather Switcher */}
+          <div className="w-px h-4 bg-white/20" />
+          <button
+            type="button"
+            onClick={handleCycleAtmosphere}
+            className="px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 text-[10px] text-amber-200 cursor-pointer font-bold transition-transform active:scale-90"
+            title="Ganti Suasana (Siang / Senja / Malam)"
+          >
+            {atmosphere === 'day' ? '☀️ Siang' : atmosphere === 'sunset' ? '🌅 Senja' : '🌌 Malam'}
+          </button>
+
+          {/* BGM RPG Music */}
+          <div className="w-px h-4 bg-white/20" />
+          <button
+            type="button"
+            onClick={handleToggleMusic}
+            className={`px-1.5 py-0.5 rounded-lg text-xs cursor-pointer transition-transform active:scale-90 ${
+              isMusicOn
+                ? 'bg-amber-400 text-amber-950 font-black shadow-md'
+                : 'bg-white/10 hover:bg-white/20 text-slate-300'
+            }`}
+            title={isMusicOn ? 'Matikan Musik Latar (BGM)' : 'Nyalakan Musik Latar (BGM)'}
+          >
+            🎵
+          </button>
+
+          {onToggleSound && (
+            <>
+              <div className="w-px h-4 bg-white/20" />
+              <button
+                type="button"
+                onClick={onToggleSound}
+                className="text-slate-300 hover:text-white cursor-pointer text-xs"
+                title={soundEnabled ? 'Matikan Suara SFX' : 'Nyalakan Suara SFX'}
+              >
+                {soundEnabled ? '🔊' : '🔇'}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -328,7 +408,7 @@ export const InteractiveWorldStage: React.FC<InteractiveWorldStageProps> = ({
 
         {/* Explorer Kafa Character on Stage */}
         <div
-          className="absolute bottom-28 z-20 transition-all duration-700 ease-out flex flex-col items-center pointer-events-none"
+          className="absolute bottom-28 z-20 transition-all duration-700 ease-out flex flex-col items-center pointer-events-auto"
           style={{ left: `calc(${characterPositionX}% - 40px)` }}
         >
           {/* Speech bubble */}
@@ -339,9 +419,19 @@ export const InteractiveWorldStage: React.FC<InteractiveWorldStageProps> = ({
             </div>
           )}
 
-          {/* Kafa Character Sprite Visual */}
-          <div
-            className={`w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 shadow-2xl border-4 border-white flex items-center justify-center text-4xl sm:text-5xl transition-transform ${
+          {/* Kafa Character Sprite Visual (Clickable) */}
+          <button
+            type="button"
+            onClick={() => {
+              sound.playStarGain();
+              if (onTapCharacter) {
+                onTapCharacter();
+              } else {
+                sound.speak('Semangat petualang hebat! Matematika itu seru dan ajaib!');
+              }
+            }}
+            title="Ketuk Kafa untuk mendengar pesan semangat!"
+            className={`w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 shadow-2xl border-4 border-white flex items-center justify-center text-4xl sm:text-5xl transition-transform cursor-pointer hover:scale-110 active:scale-90 ${
               characterAction === 'jumping'
                 ? '-translate-y-8 scale-110'
                 : characterAction === 'celebrating'
@@ -360,7 +450,7 @@ export const InteractiveWorldStage: React.FC<InteractiveWorldStageProps> = ({
               : characterAction === 'thinking'
               ? '🤔'
               : '🦊'}
-          </div>
+          </button>
 
           {/* Adventurer Title / Shadow */}
           <div className="w-14 h-3 bg-black/40 rounded-full blur-xs mt-1" />

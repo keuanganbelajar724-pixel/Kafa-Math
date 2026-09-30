@@ -45,6 +45,8 @@ export const MapView: React.FC<MapViewProps> = ({ activeProfile, onSelectNode })
     return status === 'available';
   });
 
+  const [isBgmPlaying, setIsBgmPlaying] = useState<boolean>(sound.bgmEnabled);
+
   return (
     <div className="space-y-6 pb-20 sm:pb-8">
       {/* 1. Header Banner */}
@@ -136,7 +138,61 @@ export const MapView: React.FC<MapViewProps> = ({ activeProfile, onSelectNode })
               <p className="text-xs text-slate-500 font-medium mt-0.5">{currentWorld.description}</p>
             </div>
           </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => {
+                const active = sound.toggleBgm();
+                setIsBgmPlaying(active);
+              }}
+              className={`px-3 py-1.5 rounded-2xl text-xs font-black flex items-center gap-1.5 cursor-pointer transition-all ${
+                isBgmPlaying
+                  ? 'bg-amber-500 text-amber-950 shadow-md ring-2 ring-amber-300'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              }`}
+              title={isBgmPlaying ? 'Matikan Musik Petualangan' : 'Putar Musik Petualangan'}
+            >
+              <span>{isBgmPlaying ? '🎵 Musik Aktif' : '🔇 Putar Musik'}</span>
+            </button>
+          </div>
         </div>
+
+        {/* World Quest Trail Panoramic Banner */}
+        {(() => {
+          const targetActiveNode = currentWorld.nodes[activeNodeIndex !== -1 ? activeNodeIndex : 0];
+          return (
+            <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/15 to-emerald-500/10 rounded-2xl p-4 border-2 border-amber-300/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shadow-md animate-bounce shrink-0">
+                  🦊
+                </div>
+                <div>
+                  <span className="text-[10px] font-black text-amber-800 uppercase tracking-widest block">
+                    Posisi Petualang Kafa Saat Ini:
+                  </span>
+                  <h3 className="text-base font-black text-slate-900 leading-tight">
+                    {targetActiveNode.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-semibold">
+                    {targetActiveNode.subtitle}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  onSelectNode(targetActiveNode);
+                }}
+                className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-sm shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 shrink-0"
+              >
+                <span>Mulai Petualangan Pos Ini 🚀</span>
+                <Play className="w-4 h-4 fill-current" />
+              </button>
+            </div>
+          );
+        })()}
 
         {/* Sequential Path Visualization (START -> LEVEL 1 -> LEVEL 2 -> ... -> BOSS CHALLENGE) */}
         <div className="space-y-4">

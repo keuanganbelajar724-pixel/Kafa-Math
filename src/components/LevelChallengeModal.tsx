@@ -6,6 +6,7 @@ import { InteractiveWorldStage, CharacterAction } from './adventure/InteractiveW
 import { InteractiveObjectChests } from './adventure/InteractiveObjectChests';
 import { InteractiveRuneGate } from './adventure/InteractiveRuneGate';
 import { InteractiveSteppingStones } from './adventure/InteractiveSteppingStones';
+import { InteractiveRailSequence } from './adventure/InteractiveRailSequence';
 import { BossBattleArena } from './adventure/BossBattleArena';
 import confetti from 'canvas-confetti';
 import {
@@ -59,6 +60,10 @@ export const LevelChallengeModal: React.FC<LevelChallengeModalProps> = ({
   // Boss Battle state
   const [bossHp, setBossHp] = useState<number>(3);
   const [bossHitAnimation, setBossHitAnimation] = useState<boolean>(false);
+
+  // Combo & Victory Chest
+  const [comboStreak, setComboStreak] = useState<number>(0);
+  const [isVictoryChestOpened, setIsVictoryChestOpened] = useState<boolean>(false);
 
   // Challenge status
   const [isAnswered, setIsAnswered] = useState(false);
@@ -137,6 +142,21 @@ export const LevelChallengeModal: React.FC<LevelChallengeModalProps> = ({
     }, 350);
   };
 
+  // Keyboard shortcut listener (Keys 1, 2, 3, 4)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isAnswered || !currentQ || isFinished) return;
+      if (['1', '2', '3', '4'].includes(e.key)) {
+        const idx = parseInt(e.key, 10) - 1;
+        if (currentQ.options && currentQ.options[idx]) {
+          handleSelectAnswer(currentQ.options[idx], idx);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAnswered, currentQ, isFinished]);
+
   const handleCheckAnswer = (overrideAnswer?: string) => {
     const rawAnswer = overrideAnswer !== undefined ? overrideAnswer : (selectedOption || textInputAnswer);
     if (!rawAnswer) return;
@@ -152,8 +172,10 @@ export const LevelChallengeModal: React.FC<LevelChallengeModalProps> = ({
 
     if (isMatch) {
       setIsCorrect(true);
+      const nextCombo = comboStreak + 1;
+      setComboStreak(nextCombo);
       setCorrectCount((prev) => prev + 1);
-      setEarnedXP((prev) => prev + 15);
+      setEarnedXP((prev) => prev + 15 + nextCombo * 2);
       setEarnedCoins((prev) => prev + 5);
       setKeysCount((prev) => prev + 1);
       setGemsCount((prev) => prev + 1);
@@ -167,14 +189,19 @@ export const LevelChallengeModal: React.FC<LevelChallengeModalProps> = ({
         setBossHp((prev) => Math.max(0, prev - 1));
       } else {
         setCharacterAction('celebrating');
-        setSpeechBubbleText('🎉 Hore! Jawaban Benar!');
+        setSpeechBubbleText(nextCombo > 1 ? `🔥 Combo x${nextCombo}! Luar Biasa!` : '🎉 Hore! Jawaban Benar!');
       }
 
-      sound.playCorrect();
+      if (nextCombo > 1) {
+        sound.playCombo(nextCombo);
+      } else {
+        sound.playCorrect();
+      }
       sound.playCoin();
       confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
     } else {
       setIsCorrect(false);
+      setComboStreak(0);
       setCharacterAction('thinking');
       setSpeechBubbleText('🤔 Hmm, belum tepat...');
       sound.playRetry();
@@ -219,6 +246,23 @@ export const LevelChallengeModal: React.FC<LevelChallengeModalProps> = ({
 
   // Determine active visual gameplay format
   const renderVisualGameplay = () => {
+    // Sequence / Ordering mode
+    const isSequenceQuestion =
+      currentQ.question.toLowerCase().includes('urut') ||
+      currentQ.question.toLowerCase().includes('pola') ||
+      currentQ.question.toLowerCase().includes('deret');
+
+    if (isSequenceQuestion && currentQ.options.length >= 3) {
+      return (
+        <InteractiveRailSequence
+          options={currentQ.options}
+          correctAnswer={currentQ.correctAnswer}
+          isAnswered={isAnswered}
+          onCompleteSequence={(submitted) => handleCheckAnswer(submitted)}
+        />
+      );
+    }
+
     // True / False Mode
     const isTrueFalse =
       currentQ.options.length === 2 &&
@@ -361,83 +405,117 @@ export const LevelChallengeModal: React.FC<LevelChallengeModalProps> = ({
 
         {/* Content Body */}
         {isFinished ? (
-          /* Victory & Celebration Screen */
-          <div className="p-6 sm:p-8 text-center space-y-6 bg-gradient-to-b from-slate-900 to-indigo-950 text-white">
-            <div className="relative inline-block animate-bounce">
-              <div className="text-7xl sm:text-8xl">👑</div>
-              <Sparkles className="w-8 h-8 text-yellow-300 absolute -top-2 -right-2 animate-spin" />
-            </div>
-
-            <div className="space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400">
-                PETUALANGAN BERHASIL DITAKLUKKAN!
+          !isVictoryChestOpened ? (
+            /* Tap-to-Open Mystery Victory Chest */
+            <div className="p-8 sm:p-12 text-center space-y-6 bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-950 text-white flex flex-col items-center justify-center">
+              <span className="text-xs font-black tracking-widest text-amber-300 uppercase bg-amber-500/20 px-4 py-1.5 rounded-full border border-amber-400/40">
+                ✨ TAHAP SELESAI • PETI HARTA MISTERI
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-amber-200">
+                Peti Harta Karun Legendaris Terbuka! 🎁
               </h2>
-              <p className="text-sm text-slate-200 font-semibold max-w-md mx-auto">
-                Hebat sekali, <strong className="text-yellow-300">{childName}</strong>! Kamu berhasil membuka seluruh gerbang dan menyelesaikan tantangan dengan cemerlang!
+              <div
+                onClick={() => {
+                  sound.playFanfare();
+                  sound.playCoin();
+                  confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
+                  setIsVictoryChestOpened(true);
+                }}
+                className="group cursor-pointer inline-block transform hover:scale-110 active:scale-95 transition-all p-4"
+              >
+                <div className="text-8xl sm:text-9xl animate-bounce filter drop-shadow-[0_0_35px_rgba(251,191,36,0.8)]">
+                  🎁
+                </div>
+                <div className="mt-4 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-amber-950 font-black text-base sm:text-lg shadow-2xl flex items-center justify-center gap-2 group-hover:from-amber-300 group-hover:to-orange-400">
+                  <Sparkles className="w-5 h-5" />
+                  <span>Ketuk Peti untuk Membuka Hadiah!</span>
+                </div>
+              </div>
+              <p className="text-xs text-slate-300 font-semibold max-w-sm mx-auto">
+                Kumpulkan seluruh bintang, bonus XP petualangan, dan koin emas ke dalam kantongmu!
               </p>
             </div>
-
-            {/* Stars Awarded */}
-            <div className="flex items-center justify-center gap-3">
-              {[1, 2, 3].map((starIdx) => {
-                const earned =
-                  correctCount >= 4 ? starIdx <= 3 : correctCount >= 3 ? starIdx <= 2 : starIdx <= 1;
-                return (
-                  <div
-                    key={starIdx}
-                    className={`w-14 h-14 sm:w-16 sm:h-16 rounded-3xl flex items-center justify-center border-4 ${
-                      earned
-                        ? 'bg-amber-400 border-yellow-200 text-amber-950 shadow-[0_0_25px_rgba(251,191,36,0.8)] scale-110'
-                        : 'bg-slate-800 border-slate-700 text-slate-600'
-                    }`}
-                  >
-                    <Star className={`w-8 h-8 sm:w-10 sm:h-10 ${earned ? 'fill-amber-950' : ''}`} />
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Loot & XP Summary Card */}
-            <div className="grid grid-cols-3 gap-3 max-w-md mx-auto bg-slate-950/70 p-4 rounded-3xl border border-amber-400/40">
-              <div className="text-center">
-                <span className="text-[10px] text-slate-400 font-black uppercase block">Benar</span>
-                <span className="text-xl font-black text-emerald-400">{correctCount}/{TOTAL_CHALLENGES}</span>
+          ) : (
+            /* Victory & Celebration Screen */
+            <div className="p-6 sm:p-8 text-center space-y-6 bg-gradient-to-b from-slate-900 to-indigo-950 text-white">
+              <div className="relative inline-block animate-bounce">
+                <div className="text-7xl sm:text-8xl">👑</div>
+                <Sparkles className="w-8 h-8 text-yellow-300 absolute -top-2 -right-2 animate-spin" />
               </div>
-              <div className="text-center border-x border-slate-800">
-                <span className="text-[10px] text-slate-400 font-black uppercase block">XP Didapat</span>
-                <span className="text-xl font-black text-amber-400">+{earnedXP + 40} XP</span>
-              </div>
-              <div className="text-center">
-                <span className="text-[10px] text-slate-400 font-black uppercase block">Koin Emas</span>
-                <span className="text-xl font-black text-yellow-300">+{earnedCoins + 15} 🪙</span>
-              </div>
-            </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 justify-center pt-2">
-              <button
-                onClick={() => {
-                  sound.playClick();
-                  setChallengeIndex(0);
-                  setCorrectCount(0);
-                  setIsFinished(false);
-                  setPlayerHearts(3);
-                }}
-                className="px-5 py-3 rounded-2xl border-2 border-slate-700 text-slate-300 hover:bg-slate-800 font-black flex items-center gap-2 cursor-pointer"
-              >
-                <RotateCcw className="w-4 h-4" /> Ulangi
-              </button>
-              <button
-                onClick={() => {
-                  sound.playClick();
-                  onClose();
-                }}
-                className="px-7 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-amber-950 font-black text-base shadow-xl flex items-center gap-2 cursor-pointer transition-transform hover:scale-105"
-              >
-                <span>Buka Petualangan Baru 🚀</span>
-              </button>
+              <div className="space-y-2">
+                <h2 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400">
+                  PETUALANGAN BERHASIL DITAKLUKKAN!
+                </h2>
+                <p className="text-sm text-slate-200 font-semibold max-w-md mx-auto">
+                  Hebat sekali, <strong className="text-yellow-300">{childName}</strong>! Kamu berhasil membuka seluruh gerbang dan menyelesaikan tantangan dengan cemerlang!
+                </p>
+              </div>
+
+              {/* Stars Awarded */}
+              <div className="flex items-center justify-center gap-3">
+                {[1, 2, 3].map((starIdx) => {
+                  const earned =
+                    correctCount >= 4 ? starIdx <= 3 : correctCount >= 3 ? starIdx <= 2 : starIdx <= 1;
+                  return (
+                    <div
+                      key={starIdx}
+                      className={`w-14 h-14 sm:w-16 sm:h-16 rounded-3xl flex items-center justify-center border-4 ${
+                        earned
+                          ? 'bg-amber-400 border-yellow-200 text-amber-950 shadow-[0_0_25px_rgba(251,191,36,0.8)] scale-110'
+                          : 'bg-slate-800 border-slate-700 text-slate-600'
+                      }`}
+                    >
+                      <Star className={`w-8 h-8 sm:w-10 sm:h-10 ${earned ? 'fill-amber-950' : ''}`} />
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Loot & XP Summary Card */}
+              <div className="grid grid-cols-3 gap-3 max-w-md mx-auto bg-slate-950/70 p-4 rounded-3xl border border-amber-400/40">
+                <div className="text-center">
+                  <span className="text-[10px] text-slate-400 font-black uppercase block">Benar</span>
+                  <span className="text-xl font-black text-emerald-400">{correctCount}/{TOTAL_CHALLENGES}</span>
+                </div>
+                <div className="text-center border-x border-slate-800">
+                  <span className="text-[10px] text-slate-400 font-black uppercase block">XP Didapat</span>
+                  <span className="text-xl font-black text-amber-400">+{earnedXP + 40} XP</span>
+                </div>
+                <div className="text-center">
+                  <span className="text-[10px] text-slate-400 font-black uppercase block">Koin Emas</span>
+                  <span className="text-xl font-black text-yellow-300">+{earnedCoins + 15} 🪙</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 justify-center pt-2">
+                <button
+                  onClick={() => {
+                    sound.playClick();
+                    setChallengeIndex(0);
+                    setCorrectCount(0);
+                    setIsFinished(false);
+                    setIsVictoryChestOpened(false);
+                    setComboStreak(0);
+                    setPlayerHearts(3);
+                  }}
+                  className="px-5 py-3 rounded-2xl border-2 border-slate-700 text-slate-300 hover:bg-slate-800 font-black flex items-center gap-2 cursor-pointer"
+                >
+                  <RotateCcw className="w-4 h-4" /> Ulangi
+                </button>
+                <button
+                  onClick={() => {
+                    sound.playClick();
+                    onClose();
+                  }}
+                  className="px-7 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-amber-950 font-black text-base shadow-xl flex items-center gap-2 cursor-pointer transition-transform hover:scale-105"
+                >
+                  <span>Buka Petualangan Baru 🚀</span>
+                </button>
+              </div>
             </div>
-          </div>
+          )
         ) : (
           /* Active Interactive Adventure Stage */
           <div className="p-3 sm:p-5 overflow-y-auto space-y-3">
@@ -456,6 +534,10 @@ export const LevelChallengeModal: React.FC<LevelChallengeModalProps> = ({
               hearts={playerHearts}
               keysCount={keysCount}
               gemsCount={gemsCount}
+              comboStreak={comboStreak}
+              soundEnabled={!isMuted}
+              onToggleSound={() => setIsMuted(!isMuted)}
+              onTapCharacter={() => sound.speak(`Ayo ${childName}! Tingkat kombinasimu saat ini x${comboStreak || 1}!`)}
               onSecretFound={handleSecretDiscovered}
             >
               {/* Question Riddle Parchment */}
